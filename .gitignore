@@ -1,0 +1,7 @@
+# Backup / generated files from install scripts
+*_bak
+*_bak.*
+*_bake
+*.yaml_bak
+*.yaml_bak.*
+*.yamle
