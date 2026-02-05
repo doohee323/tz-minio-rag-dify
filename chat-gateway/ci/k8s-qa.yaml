@@ -69,7 +69,7 @@ data:
   DIFY_BASE_URL: ""
   DIFY_DRILLQUIZ_BASE_URL: "https://dify.DOMAIN_PLACEHOLDER"
   DIFY_COINTUTOR_BASE_URL: ""
-  ALLOWED_CHAT_TOKEN_ORIGINS: "https://chat-qa.DOMAIN_PLACEHOLDER,http://localhost:8080"
+  ALLOWED_CHAT_TOKEN_ORIGINS: ""
   ALLOWED_SYSTEM_IDS: "drillquiz,cointutor"
   DATABASE_URL: "sqlite+aiosqlite:///./chat_gateway.db"
 

@@ -58,23 +58,21 @@ CORS_ORIGINS_DEFAULT = [
 CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
 CORS_ALLOW_HEADERS = ["X-API-Key", "Content-Type", "Authorization", "Accept"]
 
-origins = get_settings().allowed_chat_token_origins_list
-if origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=CORS_ALLOW_METHODS,
-        allow_headers=CORS_ALLOW_HEADERS,
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=CORS_ORIGINS_DEFAULT,
-        allow_credentials=True,
-        allow_methods=CORS_ALLOW_METHODS,
-        allow_headers=CORS_ALLOW_HEADERS,
-    )
+# 기본 도메인 + env 추가 목록 합쳐서 항상 허용 (env만 쓰면 us-dev 등이 빠질 수 있음)
+_origins_extra = get_settings().allowed_chat_token_origins_list
+cors_origins = list(CORS_ORIGINS_DEFAULT)
+for o in _origins_extra:
+    if o and o not in cors_origins:
+        cors_origins.append(o)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
+    expose_headers=[],
+)
 app.add_middleware(RequestLogMiddleware)
 app.include_router(chat.router)
 app.include_router(chat_page.router)
