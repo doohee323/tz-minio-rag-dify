@@ -16,6 +16,19 @@ from app.sync_service import record_chat_to_db, sync_all_from_mapping
 router = APIRouter(prefix="/v1", tags=["chat"])
 logger = logging.getLogger("chat_gateway")
 
+
+@router.get("/status")
+async def get_status():
+    """Dify 연동 설정 여부만 반환 (키/URL 값 노출 없음). 502 원인 확인용."""
+    settings = get_settings()
+    systems = {}
+    for sid in ("drillquiz", "cointutor"):
+        base = (settings.get_dify_base_url(sid) or "").strip()
+        key = (settings.get_dify_api_key(sid) or "").strip()
+        systems[sid] = {"configured": bool(base and key), "has_base_url": bool(base), "has_api_key": bool(key)}
+    return {"systems": systems}
+
+
 # 위젯 셸(헤더·토글) 다국어. chat-gateway가 채팅 앱 전체 다국어 담당.
 CHAT_UI_STRINGS = {
     "en": {"title": "Chat", "close": "Close", "open": "Open chat", "tokenError": "Could not load chat token.", "loading": "Loading..."},
