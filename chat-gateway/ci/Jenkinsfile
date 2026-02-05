@@ -103,12 +103,12 @@ pipeline {
                         env.DIFY_API_KEY = ''
                     }
                     try {
-                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_API_KEYS', variable: 'CHAT_GATEWAY_API_KEYS')]) {
-                            env.CHAT_GATEWAY_API_KEYS = env.CHAT_GATEWAY_API_KEYS
+                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_API_KEY', variable: 'CHAT_GATEWAY_API_KEY')]) {
+                            env.CHAT_GATEWAY_API_KEY = CHAT_GATEWAY_API_KEY
                         }
                     } catch (Exception e) {
-                        echo "⚠️  CHAT_GATEWAY_API_KEYS credential not found, using empty string"
-                        env.CHAT_GATEWAY_API_KEYS = ''
+                        echo "⚠️  CHAT_GATEWAY_API_KEY credential not found, using empty string"
+                        env.CHAT_GATEWAY_API_KEY = ''
                     }
 
                     // ArgoCD configuration
@@ -195,7 +195,7 @@ pipeline {
                                             export DOMAIN_PLACEHOLDER=${DOMAIN_PLACEHOLDER}
                                             export APP_NAME=${APP_NAME}
                                             export CHAT_GATEWAY_JWT_SECRET=${CHAT_GATEWAY_JWT_SECRET}
-                                            export CHAT_GATEWAY_API_KEYS=${CHAT_GATEWAY_API_KEYS}
+                                            export CHAT_GATEWAY_API_KEY=${CHAT_GATEWAY_API_KEY}
                                             export DIFY_API_KEY=${DIFY_API_KEY}
                                             export DIFY_DRILLQUIZ_API_KEY=${DIFY_DRILLQUIZ_API_KEY}
                                             export DIFY_COINTUTOR_API_KEY=${DIFY_COINTUTOR_API_KEY}

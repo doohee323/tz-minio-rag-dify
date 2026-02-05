@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     dify_base_url: str = ""
     dify_api_key: str = ""
     jwt_secret: str = Field(..., validation_alias="CHAT_GATEWAY_JWT_SECRET")
-    api_keys: str = Field("", validation_alias="CHAT_GATEWAY_API_KEYS")
+    api_keys: str = Field("", validation_alias="CHAT_GATEWAY_API_KEY")
     allowed_system_ids: str = ""
     # /v1/chat-token 호출 허용 Origin (쉼표 구분). 비우면 검사 안 함.
     allowed_chat_token_origins: str = ""

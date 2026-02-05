@@ -3,7 +3,7 @@
 
 # Chat Gateway URL (끝에 슬래시 없이)
 VUE_APP_CHAT_GATEWAY_URL=https://CHAT_GATEWAY_DOMAIN_PLACEHOLDER
-# Chat Gateway API Key (게이트웨이에서 발급한 CHAT_GATEWAY_API_KEYS 중 하나)
+# Chat Gateway API Key (게이트웨이 CHAT_GATEWAY_API_KEY와 동일)
 VUE_APP_CHAT_GATEWAY_API_KEY=CHAT_GATEWAY_API_KEY_PLACEHOLDER
 # 시스템 식별자 (예: drillquiz, cointutor). 게이트웨이 ALLOWED_SYSTEM_IDS와 일치해야 함
 VUE_APP_CHAT_GATEWAY_SYSTEM_ID=drillquiz

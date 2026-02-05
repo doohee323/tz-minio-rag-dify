@@ -23,7 +23,7 @@ Dify 앞단의 **채팅 게이트웨이**: 대상 시스템(DrillQuiz, CoinTutor
 
 다른 백엔드(DrillQuiz, CoinTutor 등)에서 게이트웨이 API를 호출하는 방식입니다.
 
-- **인증**: 요청 헤더에 `X-API-Key: <CHAT_GATEWAY_API_KEYS에 넣은 값>` 추가
+- **인증**: 요청 헤더에 `X-API-Key: <CHAT_GATEWAY_API_KEY 값>` 추가
 - **메시지 전송**: `POST http://localhost:8088/v1/chat`  
   Body (JSON): `{"system_id": "drillquiz", "user_id": "12345", "message": "안녕하세요"}`
 - **대화 목록**: `GET http://localhost:8088/v1/conversations?system_id=drillquiz&user_id=12345`  
@@ -61,7 +61,7 @@ DrillQuiz, **CoinTutor** 등에서 "채팅 열기" 버튼을 누르면 게이트
 | `DIFY_DRILLQUIZ_BASE_URL` / `DIFY_DRILLQUIZ_API_KEY` | 선택 | DrillQuiz 전용 Dify (비우면 공통 값 사용) |
 | `DIFY_COINTUTOR_BASE_URL` / `DIFY_COINTUTOR_API_KEY` | 선택 | CoinTutor 전용 Dify (비우면 공통 값 사용) |
 | `CHAT_GATEWAY_JWT_SECRET` | ✅ (채팅 페이지 사용 시) | JWT 서명/검증용 시크릿 |
-| `CHAT_GATEWAY_API_KEYS` | 선택 | API Key 인증용. 쉼표 구분 (예: `key_drillquiz_xxx,key_cointutor_yyy`). 비우면 API Key 비활성화 |
+| `CHAT_GATEWAY_API_KEY` | 선택 | API Key 인증용. 쉼표 구분 가능 (예: `key_drillquiz_xxx,key_cointutor_yyy`). 비우면 API Key 비활성화 |
 | `DATABASE_URL` | 선택 | 기본 `sqlite:///./chat_gateway.db` |
 | `ALLOWED_SYSTEM_IDS` | 선택 | 허용 `system_id` 목록, 쉼표 구분. 비우면 모두 허용 |
 
@@ -93,7 +93,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8088
 
 - API 문서: http://localhost:8088/docs  
 - 채팅 페이지 예: `http://localhost:8088/chat?token=<JWT>&embed=1&lang=en` (embed=1 위젯용, lang= en|es|ko|zh|ja, 없으면 브라우저 언어)
-- **대화 이력 조회 화면**: `https://<게이트웨이 도메인>/cache?api_key=<CHAT_GATEWAY_API_KEYS에 등록된 키>`  
+- **대화 이력 조회 화면**: `https://<게이트웨이 도메인>/cache?api_key=<CHAT_GATEWAY_API_KEY에 등록된 키>`  
   - 운영 예: `https://chat.drillquiz.com/cache?api_key=YOUR_KEY`  
   - 시스템·사용자·기간 필터로 캐시된 대화 목록과 메시지를 조회. API Key 필수.
 
@@ -105,13 +105,13 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8088
 | **DIFY_API_KEY** | Dify 스튜디오 → 사용할 **채팅 앱** 선택 → **API Access** 메뉴 → **API Key** 복사 (형식: `app-xxxx...`) |
 | **DIFY_DRILLQUIZ_*** / **DIFY_COINTUTOR_*** | DrillQuiz·CoinTutor가 **서로 다른 Dify 앱/도메인**일 때만 설정. 각각 `_BASE_URL`, `_API_KEY` |
 | **CHAT_GATEWAY_JWT_SECRET** | 아무 랜덤 문자열. 터미널에서 생성: `openssl rand -hex 32` |
-| **CHAT_GATEWAY_API_KEYS** | 서비스별로 하나씩 정해서 쉼표로 나열. 예: DrillQuiz용 `key_drillquiz_abc123`, CoinTutor용 `key_cointutor_def456`. 랜덤 생성: `openssl rand -hex 16` |
+| **CHAT_GATEWAY_API_KEY** | 서비스별로 하나씩 정해서 쉼표로 나열 가능. 예: DrillQuiz용 `key_drillquiz_abc123`, CoinTutor용 `key_cointutor_def456`. 랜덤 생성: `openssl rand -hex 16` |
 
-- `CHAT_GATEWAY_API_KEYS`를 비우면 API Key 인증은 끄고, JWT만 사용 가능.
+- `CHAT_GATEWAY_API_KEY`를 비우면 API Key 인증은 끄고, JWT만 사용 가능.
 - `ALLOWED_SYSTEM_IDS`를 비우면 모든 `system_id` 허용.
 - **`ALLOWED_CHAT_TOKEN_ORIGINS`**: `/v1/chat-token` 호출 허용 Origin (쉼표 구분). DrillQuiz 프론트 주소 예: `http://localhost:8080`. 비우면 모든 Origin 허용.
 
-**한 번에 생성하기** (CHAT_GATEWAY_JWT_SECRET, CHAT_GATEWAY_API_KEYS만 자동 생성):
+**한 번에 생성하기** (CHAT_GATEWAY_JWT_SECRET, CHAT_GATEWAY_API_KEY만 자동 생성):
 
 ```bash
 ./scripts/gen-env-values.sh
@@ -124,7 +124,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8088
 JWT를 수동으로 발급하지 않고, 프론트에서 **API로 토큰 발급**할 수 있음.
 
 - **GET /v1/chat-token**: 쿼리 `system_id`, `user_id`(필수), 선택 `lang`(en|es|ko|zh|ja). 헤더 **X-API-Key**. 응답 `{ "token": "<JWT>" }` (24시간 유효). `lang` 있으면 `{ "token": "...", "ui": { "title", "close", "open", "tokenError", "loading" } }` 로 위젯 셸 다국어 문구 포함(채팅 앱 다국어는 chat-gateway 담당).
-- DrillQuiz .env: `VUE_APP_CHAT_GATEWAY_URL`, **VUE_APP_CHAT_GATEWAY_API_KEY** (chat-gateway `CHAT_GATEWAY_API_KEYS`에 넣은 값 중 하나와 동일). 선택: `VUE_APP_CHAT_GATEWAY_SYSTEM_ID=drillquiz`. **user_id**는 앱에서 결정: 로그인 시 **username**, 비로그인 시 **anonymous**. **언어**: 위젯이 iframe URL에 `lang=en|es|ko|zh|ja`를 붙여 전달하며, 넘어오지 않으면 채팅 페이지에서 브라우저 언어로 폴백. Dify로 전송 시 `inputs.language`로 전달됨(워크플로에 변수 있으면 사용).
+- DrillQuiz .env: `VUE_APP_CHAT_GATEWAY_URL`, **VUE_APP_CHAT_GATEWAY_API_KEY** (chat-gateway `CHAT_GATEWAY_API_KEY`와 동일). 선택: `VUE_APP_CHAT_GATEWAY_SYSTEM_ID=drillquiz`. **user_id**는 앱에서 결정: 로그인 시 **username**, 비로그인 시 **anonymous**. **언어**: 위젯이 iframe URL에 `lang=en|es|ko|zh|ja`를 붙여 전달하며, 넘어오지 않으면 채팅 페이지에서 브라우저 언어로 폴백. Dify로 전송 시 `inputs.language`로 전달됨(워크플로에 변수 있으면 사용).
 - chat-gateway .env에 **ALLOWED_CHAT_TOKEN_ORIGINS=http://localhost:8080** 등 호출 허용 Origin을 넣으면, 해당 Origin에서만 `/v1/chat-token` 호출 가능.
 
 ### JWT 발급 (대상 시스템에서, 수동)

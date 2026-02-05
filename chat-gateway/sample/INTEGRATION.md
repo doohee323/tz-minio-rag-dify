@@ -4,7 +4,7 @@ tz-drillquiz에 적용한 채팅 위젯을 다른 Vue 프로젝트에 붙이는 
 
 ## 전제 조건
 
-- **Chat Gateway** 서버가 배포되어 있고, `CHAT_GATEWAY_API_KEYS` 중 하나의 API 키를 알고 있어야 합니다.
+- **Chat Gateway** 서버가 배포되어 있고, `CHAT_GATEWAY_API_KEY`(또는 배포 시 설정한 API 키)를 알고 있어야 합니다.
 - Vue 2/3 프로젝트에서 **인증 서비스**가 있거나, 최소 인터페이스(authService adapter)를 구현할 수 있어야 합니다.
 
 ---
@@ -85,7 +85,7 @@ export default {
 | 변수 | 설명 | 예시 |
 |------|------|------|
 | `VUE_APP_CHAT_GATEWAY_URL` | Chat Gateway 기준 URL (끝에 `/` 없음) | `https://chat.drillquiz.com` |
-| `VUE_APP_CHAT_GATEWAY_API_KEY` | 게이트웨이 API 키 (CHAT_GATEWAY_API_KEYS 중 하나) | (Jenkins/CI에서 주입) |
+| `VUE_APP_CHAT_GATEWAY_API_KEY` | 게이트웨이 API 키 (CHAT_GATEWAY_API_KEY와 동일) | (Jenkins/CI에서 주입) |
 | `VUE_APP_CHAT_GATEWAY_SYSTEM_ID` | 시스템 식별자 (게이트웨이 ALLOWED_SYSTEM_IDS와 일치) | `drillquiz` |
 
 예시 파일: `env-frontend.example`
