@@ -73,9 +73,9 @@ DrillQuiz, **CoinTutor** 등에서 "채팅 열기" 버튼을 누르면 게이트
 | GET | `/v1/conversations` | 쿼리: `system_id`, `user_id`. 해당 사용자 대화 목록 |
 | GET | `/v1/conversations/{id}/messages` | 특정 대화 메시지 목록 (Dify API 조회) |
 | POST | `/v1/sync` | Dify에서 대화 목록·메시지를 가져와 SQLite에 저장. API Key 필요. cron으로 주기 호출 권장 |
-| GET | `/v1/cache/conversations` | 캐시된 대화 목록 조회. 쿼리: `system_id`, `user_id`, `from_date`, `to_date`. API Key 필요 |
-| GET | `/v1/cache/conversations/{id}/messages` | 캐시된 메시지 목록. API Key 필요 |
-| GET | `/cache` | 대화 캐시 조회 웹 페이지. 쿼리: `api_key=xxx` (선택). 시스템·사용자·기간으로 조회 |
+| GET | `/v1/cache/conversations` | 캐시된 대화 목록 조회. 쿼리: `system_id`, `user_id`, `from_date`, `to_date`. **X-API-Key** 필요 |
+| GET | `/v1/cache/conversations/{id}/messages` | 캐시된 메시지 목록. **X-API-Key** 필요 |
+| GET | `/cache` | **대화 이력 조회 웹 페이지**. 쿼리: `api_key=xxx` (필수). 시스템·사용자·기간으로 조회 |
 | GET | `/chat` | 쿼리: `token=<JWT>`. 채팅 페이지. 보낸 대화는 모두 DB 기록 |
 | GET | `/chat-api` | 위와 동일 (별칭) |
 | GET | `/v1/chat-token` | 쿼리: `system_id`, `user_id`. 헤더 `X-API-Key` 필요. 채팅용 JWT 발급 (DrillQuiz: 로그인=username, 비로그인=anonymous) |
@@ -93,6 +93,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8088
 
 - API 문서: http://localhost:8088/docs  
 - 채팅 페이지 예: `http://localhost:8088/chat?token=<JWT>&embed=1&lang=en` (embed=1 위젯용, lang= en|es|ko|zh|ja, 없으면 브라우저 언어)
+- **대화 이력 조회 화면**: `https://<게이트웨이 도메인>/cache?api_key=<CHAT_GATEWAY_API_KEYS에 등록된 키>`  
+  - 운영 예: `https://chat.drillquiz.com/cache?api_key=YOUR_KEY`  
+  - 시스템·사용자·기간 필터로 캐시된 대화 목록과 메시지를 조회. API Key 필수.
 
 ### 환경변수 값 만드는 방법
 
