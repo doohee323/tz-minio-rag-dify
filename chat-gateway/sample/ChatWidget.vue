@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-widget" v-if="chatGatewayUrl && apiKey">
+  <div class="chat-widget" v-if="chatGatewayUrl">
     <transition name="chat-panel">
       <div v-show="open" class="chat-widget-panel chat-widget-panel--open">
         <div class="chat-widget-header">
@@ -38,7 +38,8 @@
 
 <script>
 // 채팅은 chat-gateway가 처리. 토큰·다국어(ui) 모두 API에서 받음.
-// .env: VUE_APP_CHAT_GATEWAY_URL, VUE_APP_CHAT_GATEWAY_API_KEY
+// env-frontend 또는 .env: VUE_APP_CHAT_GATEWAY_URL, VUE_APP_CHAT_GATEWAY_API_KEY
+// CI: env-frontend의 VUE_APP_CHAT_GATEWAY_API_KEY=CHAT_GATEWAY_API_KEY_PLACEHOLDER → Jenkins/ci/k8s.sh에서 치환
 // user_id: 로그인 시 username, 비로그인 시 'anonymous'
 import authService from '@/services/authService'
 
@@ -79,12 +80,20 @@ export default {
     }
   },
   mounted() {
+    // 키 설정 위치 안내 (키 값은 로그하지 않음)
+    console.log(
+      '[ChatWidget] 채팅 API 키 설정: 프로젝트 루트의 env-frontend 파일에 다음 변수를 추가한 뒤 "npm run serve" 재시작.',
+      '\n  - VUE_APP_CHAT_GATEWAY_URL (선택, 기본: http://localhost:8088)',
+      '\n  - VUE_APP_CHAT_GATEWAY_API_KEY (필수, 게이트웨이에서 발급한 키)',
+      '\n  - VUE_APP_CHAT_GATEWAY_SYSTEM_ID (선택, 기본: drillquiz)',
+      '\n  현재 API 키 설정 여부:', this.apiKey ? '설정됨' : '미설정'
+    )
     this.unsubscribeAuth = authService.subscribe(() => {
       this.chatToken = null
       this.chatUi = null
     })
   },
-  beforeUnmount() {
+  beforeDestroy() {
     if (this.unsubscribeAuth) this.unsubscribeAuth()
   },
   methods: {
@@ -95,6 +104,10 @@ export default {
     async fetchToken() {
       if (this.chatToken) return
       this.loadError = null
+      if (!this.apiKey) {
+        this.loadError = 'Chat is not configured. Set VUE_APP_CHAT_GATEWAY_API_KEY in env-frontend and restart the dev server.'
+        return
+      }
       const userId = this.getChatUserId()
       const lang = this.chatLang
       try {
@@ -144,7 +157,6 @@ export default {
   overflow: hidden;
 }
 
-/* 패널 열렸을 때: 버튼이 숨겨지므로 하단까지 내림 (버튼 높이만큼 여백 제거) */
 .chat-widget-panel--open {
   bottom: 20px;
   max-height: calc(100vh - 40px);
@@ -226,7 +238,8 @@ export default {
   transition: opacity 0.2s, transform 0.2s;
 }
 
-.chat-panel-enter-from,
+/* Vue 2: enter/leave (Vue 3: enter-from/leave-to) */
+.chat-panel-enter,
 .chat-panel-leave-to {
   opacity: 0;
   transform: translateY(8px);

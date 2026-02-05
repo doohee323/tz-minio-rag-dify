@@ -128,6 +128,8 @@ JWT를 수동으로 발급하지 않고, 프론트에서 **API로 토큰 발급*
 - DrillQuiz .env: `VUE_APP_CHAT_GATEWAY_URL`, **VUE_APP_CHAT_GATEWAY_API_KEY** (chat-gateway `CHAT_GATEWAY_API_KEY`와 동일). 선택: `VUE_APP_CHAT_GATEWAY_SYSTEM_ID=drillquiz`. **user_id**는 앱에서 결정: 로그인 시 **username**, 비로그인 시 **anonymous**. **언어**: 위젯이 iframe URL에 `lang=en|es|ko|zh|ja`를 붙여 전달하며, 넘어오지 않으면 채팅 페이지에서 브라우저 언어로 폴백. Dify로 전송 시 `inputs.language`로 전달됨(워크플로에 변수 있으면 사용).
 - chat-gateway .env에 **ALLOWED_CHAT_TOKEN_ORIGINS=http://localhost:8080** 등 호출 허용 Origin을 넣으면, 해당 Origin에서만 `/v1/chat-token` 호출 가능.
 
+**Vue 앱에 채팅 위젯 붙이기**: [sample/INTEGRATION.md](sample/INTEGRATION.md) 에서 단계별 적용 방법과 **sample/** 폴더(ChatWidget.vue, env 예시, authService 어댑터) 안내.
+
 ### JWT 발급 (대상 시스템에서, 수동)
 
 대상 시스템이 채팅 페이지로 보낼 때 사용할 JWT 예시 (HS256):
@@ -180,6 +182,12 @@ chat-gateway/
 │   └── routers/
 │       ├── chat.py      # POST/GET /v1/chat, /v1/conversations, ...
 │       └── chat_page.py # GET /chat?token=<JWT>
-└── templates/
-    └── chat_api.html    # 채팅 페이지 (대화 목록·메시지·전송, DB 기록)
+├── templates/
+│   └── chat_api.html    # 채팅 페이지 (대화 목록·메시지·전송, DB 기록)
+└── sample/              # Vue 앱 연동용: 위젯 컴포넌트, env 예시, 적용 가이드
+    ├── INTEGRATION.md   # 적용 방법 (파일 복사, authService, env, CI)
+    ├── ChatWidget.vue
+    ├── App.vue.snippet
+    ├── env-frontend.example
+    └── authService.adapter.example.js
 ```
