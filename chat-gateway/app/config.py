@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field
 from functools import lru_cache
 
 
@@ -6,8 +7,8 @@ class Settings(BaseSettings):
     # 공통 Dify (시스템별만 쓸 때는 비워 둬도 됨)
     dify_base_url: str = ""
     dify_api_key: str = ""
-    jwt_secret: str
-    api_keys: str = ""
+    jwt_secret: str = Field(..., validation_alias="CHAT_GATEWAY_JWT_SECRET")
+    api_keys: str = Field("", validation_alias="CHAT_GATEWAY_API_KEYS")
     allowed_system_ids: str = ""
     # /v1/chat-token 호출 허용 Origin (쉼표 구분). 비우면 검사 안 함.
     allowed_chat_token_origins: str = ""

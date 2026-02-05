@@ -70,12 +70,12 @@ pipeline {
 
                     // Chat Gateway: JWT and Dify API keys
                     try {
-                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_JWT_SECRET', variable: 'JWT_SECRET')]) {
-                            env.JWT_SECRET = env.JWT_SECRET
+                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_JWT_SECRET', variable: 'CHAT_GATEWAY_JWT_SECRET')]) {
+                            env.CHAT_GATEWAY_JWT_SECRET = env.CHAT_GATEWAY_JWT_SECRET
                         }
                     } catch (Exception e) {
                         echo "⚠️  CHAT_GATEWAY_JWT_SECRET credential not found, using empty string"
-                        env.JWT_SECRET = ''
+                        env.CHAT_GATEWAY_JWT_SECRET = ''
                     }
                     try {
                         withCredentials([string(credentialsId: 'DIFY_DRILLQUIZ_API_KEY', variable: 'DIFY_DRILLQUIZ_API_KEY')]) {
@@ -102,12 +102,12 @@ pipeline {
                         env.DIFY_API_KEY = ''
                     }
                     try {
-                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_API_KEYS', variable: 'API_KEYS')]) {
-                            env.API_KEYS = env.API_KEYS
+                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_API_KEYS', variable: 'CHAT_GATEWAY_API_KEYS')]) {
+                            env.CHAT_GATEWAY_API_KEYS = env.CHAT_GATEWAY_API_KEYS
                         }
                     } catch (Exception e) {
                         echo "⚠️  CHAT_GATEWAY_API_KEYS credential not found, using empty string"
-                        env.API_KEYS = ''
+                        env.CHAT_GATEWAY_API_KEYS = ''
                     }
 
                     // ArgoCD configuration
@@ -192,8 +192,8 @@ pipeline {
                                             echo "  APP_NAME: ${APP_NAME}"
                                             export BASE_DOMAIN=${BASE_DOMAIN}
                                             export APP_NAME=${APP_NAME}
-                                            export JWT_SECRET=${JWT_SECRET}
-                                            export API_KEYS=${API_KEYS}
+                                            export CHAT_GATEWAY_JWT_SECRET=${CHAT_GATEWAY_JWT_SECRET}
+                                            export CHAT_GATEWAY_API_KEYS=${CHAT_GATEWAY_API_KEYS}
                                             export DIFY_API_KEY=${DIFY_API_KEY}
                                             export DIFY_DRILLQUIZ_API_KEY=${DIFY_DRILLQUIZ_API_KEY}
                                             export DIFY_COINTUTOR_API_KEY=${DIFY_COINTUTOR_API_KEY}

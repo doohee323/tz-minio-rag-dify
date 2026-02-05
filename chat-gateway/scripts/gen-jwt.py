@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""채팅 페이지(/chat) 테스트용 JWT 발급. .env의 JWT_SECRET 사용."""
+"""채팅 페이지(/chat) 테스트용 JWT 발급. .env의 CHAT_GATEWAY_JWT_SECRET 사용."""
 import os
 import sys
 from pathlib import Path
@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def load_env_secret() -> str:
     env_file = ROOT / ".env"
     if not env_file.exists():
-        print("오류: .env 없음. chat-gateway/.env를 만든 뒤 JWT_SECRET을 넣으세요.", file=sys.stderr)
+        print("오류: .env 없음. chat-gateway/.env를 만든 뒤 CHAT_GATEWAY_JWT_SECRET을 넣으세요.", file=sys.stderr)
         sys.exit(1)
     secret = None
     for line in env_file.read_text().splitlines():
@@ -19,11 +19,11 @@ def load_env_secret() -> str:
         if line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.partition("=")
-        if key.strip() == "JWT_SECRET":
+        if key.strip() == "CHAT_GATEWAY_JWT_SECRET":
             secret = value.strip().strip('"').strip("'")
             break
     if not secret:
-        print("오류: .env에 JWT_SECRET이 없습니다.", file=sys.stderr)
+        print("오류: .env에 CHAT_GATEWAY_JWT_SECRET이 없습니다.", file=sys.stderr)
         sys.exit(1)
     return secret
 

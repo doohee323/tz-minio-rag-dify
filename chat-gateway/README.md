@@ -23,7 +23,7 @@ Dify 앞단의 **채팅 게이트웨이**: 대상 시스템(DrillQuiz, CoinTutor
 
 다른 백엔드(DrillQuiz, CoinTutor 등)에서 게이트웨이 API를 호출하는 방식입니다.
 
-- **인증**: 요청 헤더에 `X-API-Key: <API_KEYS에 넣은 값>` 추가
+- **인증**: 요청 헤더에 `X-API-Key: <CHAT_GATEWAY_API_KEYS에 넣은 값>` 추가
 - **메시지 전송**: `POST http://localhost:8088/v1/chat`  
   Body (JSON): `{"system_id": "drillquiz", "user_id": "12345", "message": "안녕하세요"}`
 - **대화 목록**: `GET http://localhost:8088/v1/conversations?system_id=drillquiz&user_id=12345`  
@@ -35,7 +35,7 @@ Dify 앞단의 **채팅 게이트웨이**: 대상 시스템(DrillQuiz, CoinTutor
 
 DrillQuiz, **CoinTutor** 등에서 "채팅 열기" 버튼을 누르면 게이트웨이 채팅 페이지로 이동시키는 방법입니다.
 
-- 해당 시스템 백엔드에서 **JWT 발급** (payload: `system_id`, `user_id`, `exp`, 서명: 게이트웨이와 **동일한 JWT_SECRET**)
+- 해당 시스템 백엔드에서 **JWT 발급** (payload: `system_id`, `user_id`, `exp`, 서명: 게이트웨이와 **동일한 CHAT_GATEWAY_JWT_SECRET**)
 - 사용자를 **리다이렉트** 또는 **링크/iframe**: `https://게이트웨이주소/chat?token=<발급한_JWT>`
 
 **CoinTutor 연동 상세**: [../docs/chat-gateway-cointutor-integration.md](../docs/chat-gateway-cointutor-integration.md) (백엔드 JWT 발급 예시, 프론트 링크/iframe 예시)
@@ -60,8 +60,8 @@ DrillQuiz, **CoinTutor** 등에서 "채팅 열기" 버튼을 누르면 게이트
 | `DIFY_API_KEY` | ✅ | Dify API 키 (공통). 시스템별 미설정 시 사용 |
 | `DIFY_DRILLQUIZ_BASE_URL` / `DIFY_DRILLQUIZ_API_KEY` | 선택 | DrillQuiz 전용 Dify (비우면 공통 값 사용) |
 | `DIFY_COINTUTOR_BASE_URL` / `DIFY_COINTUTOR_API_KEY` | 선택 | CoinTutor 전용 Dify (비우면 공통 값 사용) |
-| `JWT_SECRET` | ✅ (채팅 페이지 사용 시) | JWT 서명/검증용 시크릿 |
-| `API_KEYS` | 선택 | API Key 인증용. 쉼표 구분 (예: `key_drillquiz_xxx,key_cointutor_yyy`). 비우면 API Key 비활성화 |
+| `CHAT_GATEWAY_JWT_SECRET` | ✅ (채팅 페이지 사용 시) | JWT 서명/검증용 시크릿 |
+| `CHAT_GATEWAY_API_KEYS` | 선택 | API Key 인증용. 쉼표 구분 (예: `key_drillquiz_xxx,key_cointutor_yyy`). 비우면 API Key 비활성화 |
 | `DATABASE_URL` | 선택 | 기본 `sqlite:///./chat_gateway.db` |
 | `ALLOWED_SYSTEM_IDS` | 선택 | 허용 `system_id` 목록, 쉼표 구분. 비우면 모두 허용 |
 
@@ -101,14 +101,14 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8088
 | **DIFY_BASE_URL** | Dify 접속 주소 그대로. 예: `https://dify.drillquiz.com` |
 | **DIFY_API_KEY** | Dify 스튜디오 → 사용할 **채팅 앱** 선택 → **API Access** 메뉴 → **API Key** 복사 (형식: `app-xxxx...`) |
 | **DIFY_DRILLQUIZ_*** / **DIFY_COINTUTOR_*** | DrillQuiz·CoinTutor가 **서로 다른 Dify 앱/도메인**일 때만 설정. 각각 `_BASE_URL`, `_API_KEY` |
-| **JWT_SECRET** | 아무 랜덤 문자열. 터미널에서 생성: `openssl rand -hex 32` |
-| **API_KEYS** | 서비스별로 하나씩 정해서 쉼표로 나열. 예: DrillQuiz용 `key_drillquiz_abc123`, CoinTutor용 `key_cointutor_def456`. 랜덤 생성: `openssl rand -hex 16` |
+| **CHAT_GATEWAY_JWT_SECRET** | 아무 랜덤 문자열. 터미널에서 생성: `openssl rand -hex 32` |
+| **CHAT_GATEWAY_API_KEYS** | 서비스별로 하나씩 정해서 쉼표로 나열. 예: DrillQuiz용 `key_drillquiz_abc123`, CoinTutor용 `key_cointutor_def456`. 랜덤 생성: `openssl rand -hex 16` |
 
-- `API_KEYS`를 비우면 API Key 인증은 끄고, JWT만 사용 가능.
+- `CHAT_GATEWAY_API_KEYS`를 비우면 API Key 인증은 끄고, JWT만 사용 가능.
 - `ALLOWED_SYSTEM_IDS`를 비우면 모든 `system_id` 허용.
 - **`ALLOWED_CHAT_TOKEN_ORIGINS`**: `/v1/chat-token` 호출 허용 Origin (쉼표 구분). DrillQuiz 프론트 주소 예: `http://localhost:8080`. 비우면 모든 Origin 허용.
 
-**한 번에 생성하기** (JWT_SECRET, API_KEYS만 자동 생성):
+**한 번에 생성하기** (CHAT_GATEWAY_JWT_SECRET, CHAT_GATEWAY_API_KEYS만 자동 생성):
 
 ```bash
 ./scripts/gen-env-values.sh
@@ -121,7 +121,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8088
 JWT를 수동으로 발급하지 않고, 프론트에서 **API로 토큰 발급**할 수 있음.
 
 - **GET /v1/chat-token**: 쿼리 `system_id`, `user_id`(필수), 선택 `lang`(en|es|ko|zh|ja). 헤더 **X-API-Key**. 응답 `{ "token": "<JWT>" }` (24시간 유효). `lang` 있으면 `{ "token": "...", "ui": { "title", "close", "open", "tokenError", "loading" } }` 로 위젯 셸 다국어 문구 포함(채팅 앱 다국어는 chat-gateway 담당).
-- DrillQuiz .env: `VUE_APP_CHAT_GATEWAY_URL`, **VUE_APP_CHAT_GATEWAY_API_KEY** (chat-gateway `API_KEYS`와 동일). 선택: `VUE_APP_CHAT_GATEWAY_SYSTEM_ID=drillquiz`. **user_id**는 앱에서 결정: 로그인 시 **username**, 비로그인 시 **anonymous**. **언어**: 위젯이 iframe URL에 `lang=en|es|ko|zh|ja`를 붙여 전달하며, 넘어오지 않으면 채팅 페이지에서 브라우저 언어로 폴백. Dify로 전송 시 `inputs.language`로 전달됨(워크플로에 변수 있으면 사용).
+- DrillQuiz .env: `VUE_APP_CHAT_GATEWAY_URL`, **VUE_APP_CHAT_GATEWAY_API_KEY** (chat-gateway `CHAT_GATEWAY_API_KEYS`에 넣은 값 중 하나와 동일). 선택: `VUE_APP_CHAT_GATEWAY_SYSTEM_ID=drillquiz`. **user_id**는 앱에서 결정: 로그인 시 **username**, 비로그인 시 **anonymous**. **언어**: 위젯이 iframe URL에 `lang=en|es|ko|zh|ja`를 붙여 전달하며, 넘어오지 않으면 채팅 페이지에서 브라우저 언어로 폴백. Dify로 전송 시 `inputs.language`로 전달됨(워크플로에 변수 있으면 사용).
 - chat-gateway .env에 **ALLOWED_CHAT_TOKEN_ORIGINS=http://localhost:8080** 등 호출 허용 Origin을 넣으면, 해당 Origin에서만 `/v1/chat-token` 호출 가능.
 
 ### JWT 발급 (대상 시스템에서, 수동)
@@ -129,7 +129,7 @@ JWT를 수동으로 발급하지 않고, 프론트에서 **API로 토큰 발급*
 대상 시스템이 채팅 페이지로 보낼 때 사용할 JWT 예시 (HS256):
 
 - Payload: `{"system_id": "drillquiz", "user_id": "12345", "exp": <만료시간>}`  
-- 서명: `JWT_SECRET` 으로 서명.  
+- 서명: `CHAT_GATEWAY_JWT_SECRET` 으로 서명.  
 - 게이트웨이 `/chat?token=<jwt>` 로 리다이렉트하면, 게이트웨이가 검증 후 채팅 페이지를 띄움.
 
 ---
@@ -152,7 +152,7 @@ JWT를 수동으로 발급하지 않고, 프론트에서 **API로 토큰 발급*
                                SQLite (conversation 매핑 + conversation_cache, message_cache)
 ```
 
-- 새 서비스 추가: 게이트웨이에 API Key 발급(또는 동일 JWT_SECRET + system_id 규칙)만 하면 되며, 대상 시스템 코드에 Dify 호출 로직을 넣을 필요 없음.
+- 새 서비스 추가: 게이트웨이에 API Key 발급(또는 동일 CHAT_GATEWAY_JWT_SECRET + system_id 규칙)만 하면 되며, 대상 시스템 코드에 Dify 호출 로직을 넣을 필요 없음.
 
 ---
 
