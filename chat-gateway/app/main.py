@@ -40,11 +40,41 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Chat Gateway", description="Dify 앞단 채팅 게이트웨이", lifespan=lifespan)
+
+# CORS: DrillQuiz 등 프론트에서 /v1/chat-token 호출 시 필요. OPTIONS preflight + X-API-Key 허용.
+CORS_ORIGINS_DEFAULT = [
+    "https://us-dev.drillquiz.com",
+    "https://us.drillquiz.com",
+    "https://us-qa.drillquiz.com",
+    "https://cointutor.net",
+    "https://www.cointutor.net",
+    "https://dev.cointutor.net",
+    "https://qa.cointutor.net",
+    "http://localhost:8080",
+    "http://localhost:8088",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8088",
+]
+CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
+CORS_ALLOW_HEADERS = ["X-API-Key", "Content-Type", "Authorization", "Accept"]
+
 origins = get_settings().allowed_chat_token_origins_list
 if origins:
-    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["GET", "POST"], allow_headers=["*"])
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=CORS_ALLOW_METHODS,
+        allow_headers=CORS_ALLOW_HEADERS,
+    )
 else:
-    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["GET", "POST"], allow_headers=["*"])
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS_DEFAULT,
+        allow_credentials=True,
+        allow_methods=CORS_ALLOW_METHODS,
+        allow_headers=CORS_ALLOW_HEADERS,
+    )
 app.add_middleware(RequestLogMiddleware)
 app.include_router(chat.router)
 app.include_router(chat_page.router)

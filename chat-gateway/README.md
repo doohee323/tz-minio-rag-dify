@@ -64,6 +64,7 @@ DrillQuiz, **CoinTutor** 등에서 "채팅 열기" 버튼을 누르면 게이트
 | `CHAT_GATEWAY_API_KEY` | 선택 | API Key 인증용. 쉼표 구분 가능 (예: `key_drillquiz_xxx,key_cointutor_yyy`). 비우면 API Key 비활성화 |
 | `DATABASE_URL` | 선택 | 기본 `sqlite:///./chat_gateway.db` |
 | `ALLOWED_SYSTEM_IDS` | 선택 | 허용 `system_id` 목록, 쉼표 구분. 비우면 모두 허용 |
+| `ALLOWED_CHAT_TOKEN_ORIGINS` | 선택 | CORS 허용 Origin (쉼표 구분). 비우면 us-dev/us/us-qa.drillquiz.com + localhost 등 기본 목록 사용. `/v1/chat-token` 호출 시 필요 |
 
 ### API 요약
 
