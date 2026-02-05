@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# RAG 스택 + Dify 전체 삭제 (install.sh 역순)
-# 사용: ./uninstall.sh
-#   - Dify: Ingress, Helm, namespace dify 제거
-#   - RAG: Ingress, CronJob/Job, Backend/Frontend, Qdrant(Helm), namespace rag 제거
+# Remove RAG stack + Dify (reverse order of install.sh)
+# Usage: ./uninstall.sh
+#   - Dify: remove Ingress, Helm, namespace dify
+#   - RAG: remove Ingress, CronJob/Job, Backend/Frontend, Qdrant (Helm), namespace rag
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,42 +31,42 @@ k8s_domain="${k8s_domain:-$(prop 'project' 'domain')}"
 NS=rag
 NS_DIFY=dify
 
-echo "[1/9] Dify Ingress 삭제"
+echo "[1/9] Delete Dify Ingress"
 kubectl delete ingress -n "${NS_DIFY}" --all --ignore-not-found=true 2>/dev/null || true
 
-echo "[2/9] Dify (Helm) 삭제"
+echo "[2/9] Uninstall Dify (Helm)"
 helm uninstall dify -n "${NS_DIFY}" 2>/dev/null || true
 
-echo "[3/9] Dify namespace 삭제"
+echo "[3/9] Delete Dify namespace"
 kubectl delete namespace "${NS_DIFY}" --ignore-not-found=true --timeout=120s 2>/dev/null || true
 
-echo "[4/9] RAG Ingress 삭제"
+echo "[4/9] Delete RAG Ingress"
 if [[ -f rag-ingress.yaml ]]; then
   sed -e "s/k8s_project/${k8s_project}/g" -e "s/k8s_domain/${k8s_domain}/g" rag-ingress.yaml > rag-ingress.yaml_bak
   kubectl delete -f rag-ingress.yaml_bak -n "${NS}" --ignore-not-found=true 2>/dev/null || true
 fi
 
-echo "[5/9] RAG CronJob / Job 삭제"
+echo "[5/9] Delete RAG CronJob / Job"
 kubectl delete cronjob rag-ingestion-cronjob-cointutor rag-ingestion-cronjob-drillquiz -n "${NS}" --ignore-not-found=true 2>/dev/null || true
 kubectl delete cronjob rag-ingestion -n "${NS}" --ignore-not-found=true 2>/dev/null || true
 kubectl delete job rag-ingestion-job-cointutor rag-ingestion-job-drillquiz rag-ingestion-run qdrant-collection-init -n "${NS}" --ignore-not-found=true 2>/dev/null || true
 
-echo "[6/9] RAG Backend / Frontend 삭제"
+echo "[6/9] Delete RAG Backend / Frontend"
 kubectl delete -f cointutor/rag-backend.yaml -n "${NS}" --ignore-not-found=true 2>/dev/null || true
 kubectl delete -f drillquiz/rag-backend-drillquiz.yaml -n "${NS}" --ignore-not-found=true 2>/dev/null || true
 kubectl delete -f rag-frontend.yaml -n "${NS}" --ignore-not-found=true 2>/dev/null || true
 
-echo "[7/9] Qdrant (Helm) 삭제"
+echo "[7/9] Uninstall Qdrant (Helm)"
 helm uninstall qdrant -n "${NS}" 2>/dev/null || true
 
-echo "[8/9] RAG Namespace ${NS} 삭제"
+echo "[8/9] Delete RAG namespace ${NS}"
 kubectl delete namespace "${NS}" --ignore-not-found=true --timeout=120s 2>/dev/null || true
 
-echo "[9/9] 정리 대기"
+echo "[9/9] Cleanup wait"
 sleep 5
-kubectl get namespace "${NS_DIFY}" 2>/dev/null && echo "  → namespace ${NS_DIFY} 아직 존재" || echo "  → namespace ${NS_DIFY} 삭제됨"
-kubectl get namespace "${NS}" 2>/dev/null && echo "  → namespace ${NS} 아직 존재 (PVC 등 확인 후 수동 삭제)" || echo "  → namespace ${NS} 삭제됨"
+kubectl get namespace "${NS_DIFY}" 2>/dev/null && echo "  → namespace ${NS_DIFY} still exists" || echo "  → namespace ${NS_DIFY} deleted"
+kubectl get namespace "${NS}" 2>/dev/null && echo "  → namespace ${NS} still exists (check PVC etc. and delete manually)" || echo "  → namespace ${NS} deleted"
 
 echo ""
-echo "=== RAG + Dify 스택 삭제 완료 ==="
-echo "  재설치: ./install.sh"
+echo "=== RAG + Dify stack uninstall complete ==="
+echo "  Reinstall: ./install.sh"

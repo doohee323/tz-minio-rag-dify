@@ -1,4 +1,4 @@
-"""Dify 대화 목록·메시지를 가져와 SQLite에 저장하는 동기화."""
+"""Sync: fetch Dify conversation list and messages and store in SQLite."""
 import logging
 import uuid
 from datetime import datetime
@@ -57,7 +57,7 @@ async def record_chat_to_db(
     user_query: str,
     assistant_answer: str,
 ) -> None:
-    """채팅 한 건을 Dify 응답 직후 SQLite에 바로 기록. (별도 sync 불필요)."""
+    """Record one chat to SQLite right after Dify response. (No separate sync needed)."""
     now = datetime.utcnow()
     stmt_conv = sqlite_insert(ConversationCache).values(
         system_id=system_id,
@@ -83,7 +83,7 @@ async def register_sync_user(
     user_id: str,
     dify_user: str,
 ) -> None:
-    """채팅 페이지 접속 시 (system_id, user_id)를 동기화 대상으로 등록. Embed 전용 사용자도 sync 대상에 포함."""
+    """Register (system_id, user_id) as sync target when user opens chat page. Embed-only users are included."""
     stmt = sqlite_insert(SyncUser).values(
         system_id=system_id,
         user_id=user_id,
@@ -102,7 +102,7 @@ async def sync_user_conversations(
     user_id: str,
     dify_user: str,
 ) -> tuple[int, int]:
-    """한 사용자의 대화 목록과 메시지를 Dify에서 가져와 캐시 테이블에 upsert. (conversations 수, messages 수) 반환."""
+    """Fetch one user's conversation list and messages from Dify and upsert into cache tables. Returns (conversations count, messages count)."""
     convs = await get_conversations(dify_user, system_id=system_id)
     conv_count = 0
     msg_count = 0
@@ -138,7 +138,7 @@ async def sync_user_conversations(
             if not mid:
                 continue
             created_at = _ts_to_datetime(m.get("created_at"))
-            # Dify 한 건에 query(user)+answer(assistant)가 같이 있을 수 있음 → 각각 한 행씩 저장
+            # One Dify item can have query(user)+answer(assistant) together -> store one row each
             if m.get("query") is not None:
                 await _upsert_message(db, cid, f"{mid}_user", "user", m.get("query") or "", created_at)
                 msg_count += 1
@@ -149,7 +149,7 @@ async def sync_user_conversations(
 
 
 async def sync_all_from_mapping(db: AsyncSession) -> dict:
-    """ConversationMapping + SyncUser에 있는 (system_id, user_id) 기준으로 Dify에서 전부 동기화."""
+    """Sync all from Dify for (system_id, user_id) present in ConversationMapping + SyncUser."""
     q_mapping = select(
         ConversationMapping.system_id,
         ConversationMapping.user_id,

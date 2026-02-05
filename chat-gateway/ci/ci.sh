@@ -49,7 +49,7 @@ export ARGOCD_ID="${ARGOCD_ID:-admin}"
 export ARGOCD_PASSWORD="${ARGOCD_PASSWORD:-aaaaa}"
 export GIT_TOKEN="${GIT_TOKEN:-ghp_aaaaaaa}"
 
-# 상세 디버깅: 환경변수 설정 확인
+# Debug: verify environment variable setup
 log "🔍 DEBUG: Environment variable setup in ci.sh:"
 log "🔍 DEBUG: GIT_TOKEN from parameter: '${GIT_TOKEN}'"
 log "🔍 DEBUG: GIT_TOKEN length: ${#GIT_TOKEN}"
@@ -57,7 +57,7 @@ log "🔍 DEBUG: GIT_TOKEN first 10 chars: ${GIT_TOKEN:0:10}"
 log "🔍 DEBUG: GIT_TOKEN last 10 chars: ${GIT_TOKEN: -10}"
 export ARGOCD_SERVER="${ARGOCD_SERVER:-argocd.drillquiz.com}"
 export ARGOCD_REPO_URL="${ARGOCD_REPO_URL:-https://github.com/doohee323/tz-argocd-repo.git}"
-export ARGOCD_ENABLED="${ARGOCD_ENABLED:-false}"  # 로컬 테스트 시 ArgoCD 비활성화
+export ARGOCD_ENABLED="${ARGOCD_ENABLED:-false}"  # Disable ArgoCD for local testing
 export GIT_USERNAME="${GIT_USERNAME:-doohee323}"
 export GIT_REPO_NAME="${GIT_REPO_NAME:-tz-argocd-repo}"
 
@@ -298,7 +298,7 @@ stage_deploy() {
     log "    GIT_TOKEN: ${GIT_TOKEN:+[SET]}"
     log "    ARGOCD_PASSWORD: ${ARGOCD_PASSWORD:+[SET]}"
     
-    # 상세 디버깅: 환경변수 값 확인
+    # Debug: verify environment variable values
     log "🔍 DEBUG: Detailed environment variable values:"
     log "🔍 DEBUG: GIT_TOKEN length: ${#GIT_TOKEN}"
     log "🔍 DEBUG: GIT_TOKEN first 10 chars: ${GIT_TOKEN:0:10}"

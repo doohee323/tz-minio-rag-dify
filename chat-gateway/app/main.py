@@ -8,9 +8,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import cache_view, chat, chat_page, debug
+from app.routers import cache_view, chat, chat_page, debug, index
 
-# uvicorn --reload 시에도 앱 로그가 터미널에 보이도록 설정 (force=True로 기존 설정 덮음)
+# Ensure app logs appear in terminal even with uvicorn --reload (force=True overrides existing config)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -27,8 +27,7 @@ class RequestLogMiddleware(BaseHTTPMiddleware):
         client = request.client.host if request.client else "-"
         line = f"{request.method} {request.url.path} {response.status_code} {client}"
         logger.info("%s %s %s %s", request.method, request.url.path, response.status_code, client)
-        # 호출 후 터미널에 반드시 보이도록 flush
-        print(f"[요청] {line}", file=sys.stderr, flush=True)
+        print(f"[request] {line}", file=sys.stderr, flush=True)
         return response
 
 
@@ -39,9 +38,9 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Chat Gateway", description="Dify 앞단 채팅 게이트웨이", lifespan=lifespan)
+app = FastAPI(title="Chat Gateway", description="Chat gateway in front of Dify", lifespan=lifespan)
 
-# CORS: DrillQuiz 등 프론트에서 /v1/chat-token 호출 시 필요. OPTIONS preflight + X-API-Key 허용.
+# CORS: required for frontends (e.g. DrillQuiz) calling /v1/chat-token. OPTIONS preflight + X-API-Key allowed.
 CORS_ORIGINS_DEFAULT = [
     "https://us-dev.drillquiz.com",
     "https://us.drillquiz.com",
@@ -60,7 +59,7 @@ CORS_ORIGINS_DEFAULT = [
 CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
 CORS_ALLOW_HEADERS = ["X-API-Key", "Content-Type", "Authorization", "Accept"]
 
-# 기본 도메인 + env 추가 목록 합쳐서 항상 허용 (env만 쓰면 us-dev 등이 빠질 수 있음)
+# Merge default domains with env extra list so all are allowed (env-only would omit us-dev etc.)
 _origins_extra = get_settings().allowed_chat_token_origins_list
 cors_origins = list(CORS_ORIGINS_DEFAULT)
 for o in _origins_extra:
@@ -76,6 +75,7 @@ app.add_middleware(
     expose_headers=[],
 )
 app.add_middleware(RequestLogMiddleware)
+app.include_router(index.router)
 app.include_router(chat.router)
 app.include_router(chat_page.router)
 app.include_router(cache_view.router)

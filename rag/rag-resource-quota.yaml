@@ -1,5 +1,5 @@
-# 트래픽/리소스 통제 (§3): rag 네임스페이스 상한
-# 필요 시 수치 조정 또는 삭제
+# Traffic/resource control (§3): rag namespace limits
+# Adjust values or remove as needed
 apiVersion: v1
 kind: ResourceQuota
 metadata:

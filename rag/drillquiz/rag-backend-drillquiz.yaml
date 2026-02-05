@@ -1,6 +1,6 @@
-# RAG Backend DrillQuiz 전용 (방법 A: 백엔드 2개 배포)
-# ConfigMap rag-backend-drillquiz-script, Secret rag-ingestion-secret-drillquiz (각각 DrillQuiz 전용)
-# COLLECTION=rag_docs_drillquiz 고정
+# RAG Backend DrillQuiz only (approach A: two backends)
+# ConfigMap rag-backend-drillquiz-script, Secret rag-ingestion-secret-drillquiz (each DrillQuiz-specific)
+# COLLECTION=rag_docs_drillquiz fixed
 ---
 apiVersion: v1
 kind: ConfigMap

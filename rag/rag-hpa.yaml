@@ -1,5 +1,5 @@
-# HPA: 기본 설치 시 적용, min=1 max=1 (추후 max 상향 시 자동 확장)
-# 메트릭 서버 필요: kubectl top pods (미설치 시 HPA는 동작하지 않을 수 있음)
+# HPA: applied by default install, min=1 max=1 (raise max later for auto-scaling)
+# Requires metrics-server: kubectl top pods (HPA may not work without it)
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

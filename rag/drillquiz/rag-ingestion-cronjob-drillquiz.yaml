@@ -1,4 +1,4 @@
-# CronJob: DrillQuiz 전용 인덱싱 (매일 02:30, raw/drillquiz/ -> rag_docs_drillquiz)
+# CronJob: DrillQuiz-only indexing (daily 02:30, raw/drillquiz/ -> rag_docs_drillquiz)
 apiVersion: batch/v1
 kind: CronJob
 metadata:

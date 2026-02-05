@@ -1,4 +1,4 @@
-"""캐시(conversation_cache, message_cache) 조회 API 및 웹 페이지."""
+"""Cache (conversation_cache, message_cache) query API and web page."""
 from datetime import datetime, time
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Security, status
 from fastapi.responses import HTMLResponse
@@ -29,12 +29,12 @@ def _parse_date(s: str | None):
 async def list_cached_conversations(
     db: AsyncSession = Depends(get_db),
     api_key: str = Security(API_KEY_HEADER),
-    system_id: str | None = Query(None, description="시스템 ID (예: cointutor)"),
-    user_id: str | None = Query(None, description="사용자 ID"),
-    from_date: str | None = Query(None, description="시작일 YYYY-MM-DD"),
-    to_date: str | None = Query(None, description="종료일 YYYY-MM-DD"),
+    system_id: str | None = Query(None, description="System ID (e.g. cointutor)"),
+    user_id: str | None = Query(None, description="User ID"),
+    from_date: str | None = Query(None, description="Start date YYYY-MM-DD"),
+    to_date: str | None = Query(None, description="End date YYYY-MM-DD"),
 ):
-    """시스템·사용자·기간으로 대화 목록 조회. API Key 필요."""
+    """List conversations by system, user, and date range. API Key required."""
     settings = get_settings()
     if not api_key or (settings.api_keys_list and api_key not in settings.api_keys_list):
         from fastapi import HTTPException, status
@@ -72,7 +72,7 @@ async def list_cached_messages(
     db: AsyncSession = Depends(get_db),
     api_key: str = Security(API_KEY_HEADER),
 ):
-    """특정 대화의 메시지 목록. API Key 필요."""
+    """List messages for a conversation. API Key required."""
     settings = get_settings()
     if not api_key or (settings.api_keys_list and api_key not in settings.api_keys_list):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API key required")
@@ -90,11 +90,11 @@ async def list_cached_messages(
     ]
 
 
-# ---------- 웹 페이지 ----------
+# ---------- Web page ----------
 
 @router.get("/cache", response_class=HTMLResponse)
-async def cache_view_page(request: Request, api_key: str = Query("", description="API Key (조회 시 사용)")):
-    """시스템·사용자·기간으로 캐시된 대화를 조회하는 페이지."""
+async def cache_view_page(request: Request, api_key: str = Query("", description="API Key (for query)")):
+    """Page to query cached conversations by system, user, and date range."""
     return templates.TemplateResponse(
         "cache.html",
         {

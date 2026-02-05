@@ -5,7 +5,7 @@ app:
   mode: advanced-chat
   name: CoinTutor
   use_icon_as_answer_icon: false
-# OpenAI 의존성: 가져오기 시 check-dependencies 400 방지. 가져온 뒤 UI에서 각 노드 모델을 Google(Gemini)로 변경하세요.
+# OpenAI dependency: avoids check-dependencies 400 on import. After import, change each node model to Google (Gemini) in the UI.
 dependencies:
 - current_identifier: null
   type: marketplace

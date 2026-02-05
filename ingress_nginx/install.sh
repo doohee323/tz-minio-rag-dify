@@ -130,9 +130,9 @@ fi
 #  fi
 #done
 
-# TLS: Let's Encrypt 사용 (letsencrypt-prod ClusterIssuer + nginx-ingress-https.yaml)
-# self-signed 대신 Let's Encrypt 사용 시 위에서 이미 k apply -f nginx-ingress-https.yaml_bak 적용됨
-# 필요 시: kubectl get certificate -n ${NS} && kubectl describe certificate nginx-test-tls -n ${NS}
+# TLS: Let's Encrypt (letsencrypt-prod ClusterIssuer + nginx-ingress-https.yaml)
+# When using Let's Encrypt instead of self-signed, k apply -f nginx-ingress-https.yaml_bak is already applied above
+# If needed: kubectl get certificate -n ${NS} && kubectl describe certificate nginx-test-tls -n ${NS}
 
 exit 0
 

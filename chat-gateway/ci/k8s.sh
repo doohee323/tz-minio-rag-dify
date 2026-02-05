@@ -89,7 +89,7 @@ log_debug() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [DEBUG] $1" | tee -a ${LOG_FILE}
 }
 
-# ArgoCD 관련 환경 변수 설정
+# ArgoCD-related environment variables
 KUBERNETES_SERVER="https://kubernetes.default.svc"
 
 # Script start logging
@@ -179,7 +179,7 @@ install_argocd_cli() {
     fi
 }
 
-# ArgoCD 로그인
+# ArgoCD login
 argocd_login() {
     log_info "🔐 Logging into ArgoCD..."
     local argocd_server="${ARGOCD_SERVER}"
@@ -213,7 +213,7 @@ argocd_login() {
     fi
 }
 
-# ArgoCD 앱 존재 여부 확인
+# Check if ArgoCD app exists
 argocd_check_app_exists() {
     local app_name=$1
     local clean_branch=$(echo "${GIT_BRANCH}" | sed 's|^origin/||')
@@ -234,11 +234,11 @@ argocd_check_app_exists() {
     return 1
 }
 
-# Git 저장소 클론 및 디렉토리 생성 공통 함수
+# Common: clone Git repo and create directory structure
 setup_argocd_repo() {
     local app_name=$1
     local branch=$2
-    local clean=${3:-false}  # 기본값: false (기존 디렉토리 보존)
+    local clean=${3:-false}  # default: false (preserve existing dir)
     
     log_info "📁 Cloning ArgoCD repository and creating directory structure..."
     log_info "🔍 DEBUG: GIT_USERNAME = '${GIT_USERNAME}'"
@@ -250,7 +250,7 @@ setup_argocd_repo() {
     AUTHENTICATED_GIT_URL="https://${GIT_USERNAME}:${GIT_TOKEN}@${REPO_URL_WITHOUT_PROTOCOL}"
     log_info "🔍 DEBUG: AUTHENTICATED_GIT_URL = '${AUTHENTICATED_GIT_URL}'"
     
-    # Git 저장소 처리 (클론 또는 업데이트)
+    # Git repo: clone or update
     if [ -d "tz-argocd-repo" ]; then
         log_info "📁 Existing repository found, updating..."
         pushd tz-argocd-repo
@@ -262,7 +262,7 @@ setup_argocd_repo() {
         git clone ${AUTHENTICATED_GIT_URL} tz-argocd-repo
     fi
     
-    # 앱 디렉토리 생성
+    # Create app directory
     if [ "${clean}" = "true" ]; then
         log_info "🗑️  Cleaning and creating app directory structure..."
         log_info "🔍 DEBUG: Command would be: rm -Rf tz-argocd-repo/${app_name}/${branch}"
@@ -273,13 +273,13 @@ setup_argocd_repo() {
     log_info "🔍 DEBUG: Command would be: mkdir -p tz-argocd-repo/${app_name}/${branch}"
     mkdir -p tz-argocd-repo/${app_name}/${branch}
     
-    # 빈 k8s.yaml 파일 생성 (초기화 시에만)
+    # Create empty k8s.yaml (only on init)
     if [ "${clean}" != "true" ]; then
         log_info "📄 Creating initial k8s.yaml file..."
         echo "# Initial k8s.yaml file - will be updated by deployment" > tz-argocd-repo/${app_name}/${branch}/k8s.yaml
     fi
     
-    # Git에 커밋 (변경사항이 있을 때만)
+    # Git commit (only when there are changes)
     log_info "💾 Committing changes..."
     pushd tz-argocd-repo
     git add .
@@ -293,21 +293,21 @@ setup_argocd_repo() {
     popd
 }
 
-# ArgoCD 앱 초기화
+# ArgoCD app initialization
 argocd_init() {
     local app_name=$1
     local project=$2
     local namespace=$3
     local branch=$4
     
-    # ArgoCD 앱 이름을 app_name-clean_branch 형식으로 설정
+    # ArgoCD app name: app_name-clean_branch
     local clean_branch=$(echo "${GIT_BRANCH}" | sed 's|^origin/||')
     local argocd_app_name="${app_name}-${clean_branch}"
     log_info "🚀 Initializing ArgoCD app: ${argocd_app_name}"
     
     argocd_login
 
-    # Git 저장소 클론 및 디렉토리 생성 (ARGOCD_FOLDER 사용)
+    # Clone repo and create dir (using ARGOCD_FOLDER)
     setup_argocd_repo ${app_name} ${ARGOCD_FOLDER}
 
     # Use local argocd binary if available, otherwise use PATH
@@ -335,7 +335,7 @@ argocd_init() {
     log_info "✅ ArgoCD app initialized: ${argocd_app_name}"
 }
 
-# ArgoCD Git 저장소 업데이트 및 동기화
+# ArgoCD Git repo update and sync
 argocd_update_and_sync() {
     local app_name=$1
     local target_k8s_file=$2
@@ -343,8 +343,8 @@ argocd_update_and_sync() {
     
     log_info "🔄 Updating ArgoCD Git repository and syncing: ${app_name}"
     
-    # Git 저장소 클론 및 디렉토리 생성
-    # prod, stg 폴더는 기존 파일 보존, 다른 폴더는 정리
+    # Clone Git repo and create dirs
+    # prod, stg folders: preserve existing files; other folders: clean
     if [ "${ARGOCD_FOLDER}" = "prod" ] || [ "${ARGOCD_FOLDER}" = "stg" ]; then
         log_info "🛡️  Protected folder ${ARGOCD_FOLDER}: preserving existing files"
         setup_argocd_repo ${app_name} ${ARGOCD_FOLDER} false
@@ -375,7 +375,7 @@ argocd_update_and_sync() {
     log_info "🔍 DEBUG: Command would be: rm -Rf tz-argocd-repo"
     rm -Rf tz-argocd-repo
     
-    # ArgoCD 동기화
+    # ArgoCD sync
     argocd_login
     local clean_branch=$(echo "${GIT_BRANCH}" | sed 's|^origin/||')
     local argocd_app_name="${app_name}-${clean_branch}"
@@ -391,7 +391,7 @@ argocd_update_and_sync() {
     log_info "✅ ArgoCD update and sync completed: ${argocd_app_name}"
 }
 
-# ArgoCD 처리 메인 함수
+# ArgoCD main handler
 handle_argocd_deployment() {
     local app_name=$1
     local project=$2
@@ -406,15 +406,15 @@ handle_argocd_deployment() {
     log_info "🔍 DEBUG: namespace = '${namespace}'"
     log_info "🔍 DEBUG: target_k8s_file = '${target_k8s_file}'"
     
-    # ArgoCD CLI 설치
+    # Install ArgoCD CLI
     log_info "🔍 DEBUG: Installing ArgoCD CLI..."
     install_argocd_cli
     
-    # ArgoCD 로그인
+    # ArgoCD login
     log_info "🔍 DEBUG: Logging into ArgoCD..."
     argocd_login
     
-    # 앱 존재 여부 확인
+    # Check if app exists
     log_info "🔍 DEBUG: Checking if ArgoCD app exists..."
     if argocd_check_app_exists ${app_name}; then
         log_info "📝 App exists, updating Git repository and syncing..."
@@ -425,7 +425,7 @@ handle_argocd_deployment() {
         log_info "🔍 DEBUG: Calling argocd_init..."
         argocd_init ${app_name} ${project} ${namespace} ${branch}
         
-        # 초기화 후에도 Git 저장소 업데이트
+        # Update Git repo after init too
         log_info "📝 Updating Git repository after initialization..."
         log_info "🔍 DEBUG: Calling argocd_update_and_sync after init..."
         argocd_update_and_sync ${app_name} ${target_k8s_file} ${branch}
@@ -439,32 +439,32 @@ handle_argocd_deployment() {
 #    sleep 1000
 }
 
-# 브랜치 리소스 정리 함수
+# Clean up branch resources
 cleanup_branch_resources() {
     log_info "🧹 Starting branch resource cleanup..."
     
-    # 현재 브랜치 정보
+    # Current branch info
     local current_branch=$(echo "${GIT_BRANCH}" | sed 's|^origin/||')
     local app_prefix="drillquiz-"
     
     log_info "🔍 Current branch: ${current_branch}"
     log_info "🔍 App prefix: ${app_prefix}"
     
-    # ArgoCD가 활성화된 경우에만 정리 수행
+    # Run cleanup only when ArgoCD is enabled
     if [ "${ARGOCD_ENABLED}" != "true" ]; then
         log_info "ℹ️  ArgoCD disabled, skipping branch resource cleanup"
         return 0
     fi
     
-    # tz-argocd-repo에서 기존 브랜치 폴더 목록 조회
+    # List existing branch folders in tz-argocd-repo
     log_info "📁 Checking existing ArgoCD repository folders..."
     
-    # Git 저장소 클론 (임시)
+    # Clone Git repo (temporary)
     if [ -n "${GIT_USERNAME}" ] && [ -n "${GIT_TOKEN}" ]; then
         REPO_URL_WITHOUT_PROTOCOL=$(echo "${ARGOCD_REPO_URL}" | sed 's|^https://||')
         AUTHENTICATED_GIT_URL="https://${GIT_USERNAME}:${GIT_TOKEN}@${REPO_URL_WITHOUT_PROTOCOL}"
         
-        # 임시로 클론
+        # Clone temporarily
         git clone ${AUTHENTICATED_GIT_URL} tz-argocd-repo-temp
         if [ $? -eq 0 ] && [ -d "tz-argocd-repo-temp/drillquiz" ]; then
             local existing_folders=$(ls tz-argocd-repo-temp/drillquiz/ 2>/dev/null | grep -v '^\.' || echo "")
@@ -480,19 +480,19 @@ cleanup_branch_resources() {
         return 0
     fi
     
-    # 원격 브랜치 목록 조회 (실제 존재하는 브랜치들)
+    # List remote branches (actually existing)
     log_info "🌿 Checking remote branches..."
     local remote_branches=$(git branch -r 2>/dev/null | sed 's|origin/||' | grep -v 'HEAD' | tr '\n' ' ' || echo "")
     log_info "🌿 Remote branches: ${remote_branches}"
     
-    # 삭제할 대상들을 먼저 수집
+    # Collect cleanup targets first
     local cleanup_folders=()
     local cleanup_argocd_apps=()
     
-    # 각 폴더 확인 및 삭제 대상 수집
+    # Check each folder and collect cleanup targets
     for folder in ${existing_folders}; do
-        # 현재 브랜치가 아니고, 원격에 존재하지 않는 브랜치인 경우 정리 대상에 추가
-        # prod, stg, k8s, main, qa 브랜치는 보호 (프로덕션/중요 브랜치)
+        # Add to cleanup if not current branch and branch no longer exists on remote
+        # prod, stg, k8s, main, qa branches are protected (production/important)
         if [ "${folder}" != "${current_branch}" ] && [ "${folder}" != "prod" ] && [ "${folder}" != "stg" ] && [ "${folder}" != "k8s" ] && [ "${folder}" != "main" ] && [ "${folder}" != "qa" ]; then
             local branch_exists=$(echo "${remote_branches}" | grep -o "\b${folder}\b")
             
@@ -510,7 +510,7 @@ cleanup_branch_resources() {
         fi
     done
     
-    # 정리할 대상이 있는지 확인
+    # Check if there are targets to clean
     if [ ${#cleanup_folders[@]} -eq 0 ]; then
         log_info "ℹ️  No folders to clean up"
         return 0
@@ -518,15 +518,15 @@ cleanup_branch_resources() {
     
     log_info "🗑️  Cleaning up resources for ${#cleanup_folders[@]} deleted branches: ${cleanup_folders[*]}"
     
-    # ArgoCD 앱 삭제
+    # Delete ArgoCD apps
     log_info "🗑️  Cleaning up ArgoCD apps for ${#cleanup_argocd_apps[@]} deleted branches..."
     
-    # ArgoCD CLI 사용 가능한지 확인
+    # Check if ArgoCD CLI is available
     if command -v argocd &> /dev/null || [ -f "./argocd" ]; then
-        # ArgoCD 로그인
-        argocd_login
+    # ArgoCD login
+    argocd_login
         
-        # ArgoCD 앱들 삭제
+        # Delete ArgoCD apps
         for argocd_app_name in "${cleanup_argocd_apps[@]}"; do
             log_info "  🗑️  Deleting ArgoCD app: ${argocd_app_name}"
             if [ -f "./argocd" ]; then
@@ -539,7 +539,7 @@ cleanup_branch_resources() {
         log_info "  ⚠️  ArgoCD CLI not available, skipping ArgoCD app deletion"
     fi
     
-    # ArgoCD Git 저장소에서 브랜치 폴더들 삭제
+    # Delete branch folders from ArgoCD Git repo
     if [ -n "${GIT_USERNAME}" ] && [ -n "${GIT_TOKEN}" ]; then
         log_info "🗑️  Cleaning up ArgoCD Git repository folders for ${#cleanup_folders[@]} deleted branches..."
         
@@ -547,16 +547,16 @@ cleanup_branch_resources() {
         REPO_URL_WITHOUT_PROTOCOL=$(echo "${ARGOCD_REPO_URL}" | sed 's|^https://||')
         AUTHENTICATED_GIT_URL="https://${GIT_USERNAME}:${GIT_TOKEN}@${REPO_URL_WITHOUT_PROTOCOL}"
         
-        # 한 번만 clone
+        # Clone once
         git clone ${AUTHENTICATED_GIT_URL} tz-argocd-repo-cleanup
         
-        # 모든 삭제 대상 폴더들 삭제
+        # Delete all cleanup target folders
         for folder in "${cleanup_folders[@]}"; do
             log_info "  🗑️  Deleting folder: drillquiz/${folder}"
             rm -Rf tz-argocd-repo-cleanup/drillquiz/${folder}
         done
         
-        # 변경사항 커밋 및 푸시
+        # Commit and push changes
         pushd tz-argocd-repo-cleanup
         git add .
         if git diff --staged --quiet; then
@@ -576,17 +576,17 @@ cleanup_branch_resources() {
     log_info "✅ Branch resource cleanup completed"
 }
 
-# kubectl로 직접 배포하는 함수
+# Deploy directly with kubectl
 deploy_with_kubectl() {
     local target_k8s_file=$1
     local namespace=$2
     
     log_info "🚀 Deploying directly with kubectl..."
     
-    # kubectl 설치
+    # Install kubectl
     wget -q https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
     
-    # 네임스페이스 확인 및 생성
+    # Check and create namespace
     if ! kubectl get namespace ${namespace} >/dev/null 2>&1; then
         log_info "📦 Creating namespace ${namespace}..."
         kubectl create namespace ${namespace}
@@ -594,7 +594,7 @@ deploy_with_kubectl() {
         log_info "✅ Namespace ${namespace} already exists"
     fi
     
-    # 매니페스트 파일 적용
+    # Apply manifest files
     log_info "📋 Applying Kubernetes manifest: ${target_k8s_file}"
     kubectl apply -f ${target_k8s_file} --record=true
     
@@ -618,15 +618,15 @@ setup_environment() {
     # Set staging and domain suffix
     if [ "${clean_branch}" = "main" ]; then
         STAGING="prod"
-        ARGOCD_FOLDER="prod"  # main 브랜치는 prod 폴더에 배포
+        ARGOCD_FOLDER="prod"  # main branch deploys to prod folder
         DOMAIN_SUFFIX=""
     elif [ "${clean_branch}" = "qa" ]; then
         STAGING="qa"
-        ARGOCD_FOLDER="stg"   # qa 브랜치는 stg 폴더에 배포
+        ARGOCD_FOLDER="stg"   # qa branch deploys to stg folder
         DOMAIN_SUFFIX="-qa"
     else
         STAGING="dev"
-        ARGOCD_FOLDER="${clean_branch}"  # 기타 브랜치는 브랜치명 그대로
+        ARGOCD_FOLDER="${clean_branch}"  # other branches use branch name as folder
         DOMAIN_SUFFIX="-${clean_branch}"
     fi
     
@@ -691,16 +691,16 @@ build_frontend() {
     cp -f seo-backup/sitemap.xml public/ 2>/dev/null || true
     
     # robots.txt setup by domain
-    # 허용된 도메인: drillquiz.com, devops.drillquiz.com, leetcode.drillquiz.com, us.drillquiz.com
-    # 차단된 도메인: us-dev.drillquiz.com, us-qa.drillquiz.com
+    # Allowed: drillquiz.com, devops.drillquiz.com, leetcode.drillquiz.com, us.drillquiz.com
+    # Blocked: us-dev.drillquiz.com, us-qa.drillquiz.com
     if [[ "${DOMAIN}" =~ ^(drillquiz\.com|www\.drillquiz\.com|devops\.drillquiz\.com|leetcode\.drillquiz\.com|us\.drillquiz\.com)$ ]]; then
-        # 허용된 프로덕션 도메인: SEO 설정 포함
+        # Allowed production domain: include SEO settings
         cat > public/robots.txt << EOF
 User-agent: *
-# 기본적으로 모든 페이지 허용
+# Allow all pages by default
 Allow: /
 
-# 공개 엔드포인트 명시적으로 허용 (Google 크롤러 접근)
+# Explicitly allow public endpoints (Google crawler access)
 Allow: /api/health/
 Allow: /api/translations/
 Allow: /api/exams/
@@ -711,17 +711,17 @@ Allow: /api/exam/
 Allow: /api/realtime/mandatory-rules/
 Allow: /api/realtime/interview-prompt-template/
 
-# Vue.js SPA 페이지들 허용
+# Vue.js SPA pages
 Allow: /getting-started
 Allow: /random-practice
 Allow: /question-files
 Allow: /login
 Allow: /register
 
-# Sitemap 위치
+# Sitemap location
 Sitemap: https://${DOMAIN}/sitemap.xml
 
-# 관리자 페이지 및 개인정보 관련 페이지 차단
+# Block admin and privacy-related pages
 Disallow: /admin/
 Disallow: /api/users/
 Disallow: /api/user-profile/
@@ -733,10 +733,10 @@ Disallow: /api/auth/
 Disallow: /api/token/
 Disallow: /api/google-oauth/
 
-# API 다운로드 엔드포인트 차단 (인덱싱 불필요)
+# Block API download endpoints (no need to index)
 Disallow: /api/question-files/*/download/
 
-# 쿼리 파라미터가 있는 동적 URL 차단 (canonical 태그로 처리되지만 크롤링 부하 감소)
+# Block dynamic URLs with query params (canonical handles it but reduces crawl load)
 Disallow: /*?returnTo=
 Disallow: /*?fromHomeMenu=
 Disallow: /*?question_id=
@@ -747,7 +747,7 @@ Disallow: /*?sortOrder=
 EOF
         log_info "✅ robots.txt created for allowed domain: ${DOMAIN}"
     else
-        # 차단된 개발/QA 도메인: 모든 크롤링 차단
+        # Blocked dev/QA domain: block all crawling
         cat > public/robots.txt << EOF
 User-agent: *
 Disallow: /
@@ -927,7 +927,7 @@ deploy_to_kubernetes() {
     # Delete existing resources (continue even if failed)
     kubectl -n ${NAMESPACE} delete -f ci/k8s.yaml || log_info "No resources to delete (normal)"
 
-    # 배포 방식 결정 (ArgoCD 또는 kubectl 직접 배포)
+    # Decide deployment method (ArgoCD or direct kubectl)
     log_info "🔍 DEBUG: Checking ArgoCD deployment conditions..."
     log_info "🔍 DEBUG: ARGOCD_ENABLED = '${ARGOCD_ENABLED}'"
     log_info "🔍 DEBUG: STAGING = '${STAGING}'"
@@ -937,9 +937,9 @@ deploy_to_kubernetes() {
     if [ "${ARGOCD_ENABLED}" = "true" ]; then
         log_info "🎯 Processing ArgoCD deployment..."
         
-        # ArgoCD 관련 변수 설정
+        # ArgoCD-related variable setup
         #APP_NAME="drillquiz${DOMAIN_SUFFIX}"
-        # POSIX 호환 방식으로 문자열 치환
+        # POSIX-compatible string substitution
         PROJECT=$(echo "${NAMESPACE}" | sed 's/-dev$//')
         TARGET_K8S_FILE="${WORKSPACE}/k8s_file.yaml"
         
@@ -948,12 +948,12 @@ deploy_to_kubernetes() {
         log_info "🔍 DEBUG: PROJECT = '${PROJECT}'"
         log_info "🔍 DEBUG: TARGET_K8S_FILE = '${TARGET_K8S_FILE}'"
         
-        # k8s.yaml 파일을 ArgoCD용으로 복사하고 변수 치환
+        # Copy k8s.yaml for ArgoCD and substitute variables
         log_info "📋 Preparing Kubernetes manifest for ArgoCD..."
         log_info "🔍 DEBUG: Copying ci/k8s.yaml to ${TARGET_K8S_FILE}"
         cp ci/k8s.yaml ${TARGET_K8S_FILE}
         
-        # ArgoCD용 변수 치환 (macOS 호환). DOMAIN_PLACEHOLDER = base domain (e.g. drillquiz.com)
+        # Variable substitution for ArgoCD (macOS compatible). DOMAIN_PLACEHOLDER = base domain (e.g. drillquiz.com)
         log_info "🔧 Applying variable substitutions for ArgoCD deployment..."
         DOMAIN_PLACEHOLDER_VALUE="${DOMAIN_PLACEHOLDER:-$BASE_DOMAIN}"
         sed -i.bak "s/DOMAIN_PLACEHOLDER/${DOMAIN_PLACEHOLDER_VALUE}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
@@ -961,7 +961,7 @@ deploy_to_kubernetes() {
         sed -i.bak "s/GIT_BRANCH/${SECRET_SUFFIX}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         sed -i.bak "s/STAGING/${STAGING}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         
-        # Secret 값들 치환
+        # Substitute Secret values
         GOOGLE_OAUTH_CLIENT_SECRET_B64=$(echo -n ${GOOGLE_OAUTH_CLIENT_SECRET} | base64)
         MINIO_SECRET_KEY_B64=$(echo -n ${MINIO_SECRET_KEY} | base64)
         POSTGRES_PASSWORD_B64=$(echo -n ${POSTGRES_PASSWORD} | base64)
@@ -990,7 +990,7 @@ deploy_to_kubernetes() {
         log_info "✅ Variable substitutions completed for ArgoCD deployment"
         
         log_info "📄 Generated Kubernetes manifest: ${TARGET_K8S_FILE}"
-        # ArgoCD 배포 (조건부 실행)
+        # ArgoCD deploy (conditional)
         if [ "${ARGOCD_ENABLED}" = "true" ]; then
             log_info "🔍 DEBUG: File copy completed, calling handle_argocd_deployment"
             handle_argocd_deployment ${APP_NAME} ${PROJECT} ${NAMESPACE} ${TARGET_K8S_FILE} ${ARGOCD_FOLDER}
@@ -1038,7 +1038,7 @@ deploy_to_kubernetes() {
 
     log_info "✅ Deployment and migration completed!"
     
-    # 브랜치 리소스 정리 (dev 환경에서만)
+    # Clean up branch resources (dev environment only)
     if [ "${STAGING}" != "prod" ] && [ "${STAGING}" != "staging" ] && [ "${STAGING}" != "qa" ]; then
         cleanup_branch_resources
     fi

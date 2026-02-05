@@ -24,7 +24,7 @@ def _log_dify_error(method: str, url: str, status: int, body: str | bytes) -> No
     except Exception:
         text = str(body)[:500]
     logger.warning(
-        "Dify API 오류: %s %s → %s | body: %s",
+        "Dify API error: %s %s -> %s | body: %s",
         method,
         url,
         status,

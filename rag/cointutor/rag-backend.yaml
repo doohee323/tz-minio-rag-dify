@@ -52,7 +52,7 @@ data:
     class QueryRequest(BaseModel):
         question: str
         top_k: int = 5
-        collection: str | None = None  # 주제별 분리: rag_docs_cointutor, rag_docs_drillquiz 등
+        collection: str | None = None  # Per-topic: rag_docs_cointutor, rag_docs_drillquiz, etc.
 
     @app.get("/health")
     def health():

@@ -19,7 +19,7 @@ logger = logging.getLogger("chat_gateway")
 
 @router.get("/status")
 async def get_status():
-    """Dify 연동 설정 여부만 반환 (키/URL 값 노출 없음). 502 원인 확인용."""
+    """Returns only whether Dify integration is configured (no key/URL exposure). For 502 troubleshooting."""
     settings = get_settings()
     systems = {}
     for sid in ("drillquiz", "cointutor"):
@@ -27,17 +27,6 @@ async def get_status():
         key = (settings.get_dify_api_key(sid) or "").strip()
         systems[sid] = {"configured": bool(base and key), "has_base_url": bool(base), "has_api_key": bool(key)}
     return {"systems": systems}
-
-
-# 위젯 셸(헤더·토글) 다국어. chat-gateway가 채팅 앱 전체 다국어 담당.
-CHAT_UI_STRINGS = {
-    "en": {"title": "Chat", "close": "Close", "open": "Open chat", "tokenError": "Could not load chat token.", "loading": "Loading..."},
-    "es": {"title": "Chat", "close": "Cerrar", "open": "Abrir chat", "tokenError": "No se pudo cargar el token del chat.", "loading": "Cargando..."},
-    "ko": {"title": "채팅", "close": "닫기", "open": "채팅 열기", "tokenError": "채팅 토큰을 불러오지 못했습니다.", "loading": "로딩 중..."},
-    "zh": {"title": "聊天", "close": "关闭", "open": "打开聊天", "tokenError": "无法加载聊天令牌。", "loading": "加载中..."},
-    "ja": {"title": "チャット", "close": "閉じる", "open": "チャットを開く", "tokenError": "チャットトークンを読み込めませんでした。", "loading": "読み込み中..."},
-}
-CHAT_UI_LANGS = frozenset(CHAT_UI_STRINGS)
 
 
 def _resolve_identity(
@@ -215,7 +204,7 @@ async def post_sync(
     db: AsyncSession = Depends(get_db),
     api_key: str = Security(API_KEY_HEADER),
 ):
-    """ConversationMapping + SyncUser에 있는 사용자들의 대화를 Dify에서 가져와 SQLite에 저장. API Key 필요. cron 등으로 주기 호출."""
+    """Fetch conversations from Dify for users in ConversationMapping + SyncUser and store in SQLite. API Key required. Call periodically via cron etc."""
     settings = get_settings()
     if not api_key or (settings.api_keys_list and api_key not in settings.api_keys_list):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API key required")
@@ -226,12 +215,11 @@ async def post_sync(
 @router.get("/chat-token", response_model=dict)
 async def get_chat_token(
     request: Request,
-    system_id: str = Query(..., description="시스템 ID (예: drillquiz)"),
-    user_id: str = Query("12345", description="사용자 ID"),
-    lang: str = Query("", description="위젯/채팅 UI 언어. en|es|ko|zh|ja, 없으면 응답에 ui 없음"),
+    system_id: str = Query(..., description="System ID (e.g. drillquiz)"),
+    user_id: str = Query("12345", description="User ID"),
     api_key: str = Security(API_KEY_HEADER),
 ):
-    """채팅 페이지용 JWT 발급. X-API-Key 필요. lang 있으면 응답에 ui(위젯 셸 문구) 포함."""
+    """Issue JWT for chat page. X-API-Key required."""
     settings = get_settings()
     if not api_key or (settings.api_keys_list and api_key not in settings.api_keys_list):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API key required")
@@ -246,18 +234,15 @@ async def get_chat_token(
     token = jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
     if hasattr(token, "decode"):
         token = token.decode("utf-8")
-    out = {"token": token}
-    if lang and lang.strip().lower() in CHAT_UI_LANGS:
-        out["ui"] = CHAT_UI_STRINGS[lang.strip().lower()]
-    return out
+    return {"token": token}
 
 
 @router.post("/sync/me", response_model=dict)
 async def post_sync_me(
-    token: str = Query(..., description="JWT (채팅 페이지 URL의 token 쿼리와 동일)"),
+    token: str = Query(..., description="JWT (same as token query on chat page URL)"),
     db: AsyncSession = Depends(get_db),
 ):
-    """현재 사용자(토큰 기준)의 Dify 대화만 DB로 동기화. 채팅 페이지에서 주기·종료 시 AJAX로 호출."""
+    """Sync only the current user's (by token) Dify conversations to DB. Called via AJAX from chat page periodically or on close."""
     import logging
     from app.auth import decode_jwt
     from app.sync_service import sync_user_conversations

@@ -13,15 +13,15 @@ data:
     <body>
     <h1>RAG Query</h1>
     <p>
-      <label>주제: </label>
+      <label>Topic: </label>
       <select id="topic">
         <option value="rag_docs_cointutor">CoinTutor</option>
         <option value="rag_docs_drillquiz">DrillQuiz</option>
       </select>
     </p>
     <p>
-      <input id="q" placeholder="질문 입력" style="width:300px" />
-      <button onclick="query()">검색</button>
+      <input id="q" placeholder="Enter question" style="width:300px" />
+      <button onclick="query()">Search</button>
     </p>
     <pre id="out"></pre>
     <script>
@@ -29,7 +29,7 @@ data:
       var q = document.getElementById('q').value;
       var coll = document.getElementById('topic').value;
       var out = document.getElementById('out');
-      out.textContent = '요청 중...';
+      out.textContent = 'Requesting...';
       fetch('/query', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({question: q, top_k: 5, collection: coll}) })
         .then(function(r) {
           var ct = (r.headers.get('Content-Type') || '');
@@ -39,11 +39,11 @@ data:
             });
           }
           if (ct.indexOf('application/json') >= 0) return r.json();
-          return r.text().then(function(t) { throw new Error('응답이 JSON이 아님 (백엔드 점검 필요): ' + t.slice(0, 150)); });
+          return r.text().then(function(t) { throw new Error('Response is not JSON (check backend): ' + t.slice(0, 150)); });
         })
         .then(function(d) { out.textContent = JSON.stringify(d, null, 2); })
         .catch(function(e) {
-          out.textContent = 'Error: ' + e.message + '\n\n※ RAG Backend Pod 확인: kubectl get pods -n rag\n   Secret 없으면: rag-ingestion-secret-cointutor, rag-ingestion-secret-drillquiz (MINIO_*, GEMINI_API_KEY)';
+          out.textContent = 'Error: ' + e.message + '\n\nCheck RAG Backend Pod: kubectl get pods -n rag\nIf Secret missing: rag-ingestion-secret-cointutor, rag-ingestion-secret-drillquiz (MINIO_*, GEMINI_API_KEY)';
         });
     }
     </script>

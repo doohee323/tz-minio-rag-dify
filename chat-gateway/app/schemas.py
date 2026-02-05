@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class ChatRequest(BaseModel):
-    """system_id/user_id는 JWT 사용 시 생략 가능(토큰에서 사용)."""
+    """system_id/user_id can be omitted when using JWT (taken from token)."""
     system_id: str | None = Field(None, min_length=1, max_length=64)
     user_id: str | None = Field(None, min_length=1, max_length=256)
     message: str = Field(..., min_length=1)

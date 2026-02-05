@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# RAG 스택 설치: install.sh 한 번 실행으로 전체 구성 (삭제 후 재실행 가능)
-# - Namespace rag, Qdrant(Helm), 컬렉션, RAG backend/frontend, Ingress, Ingestion CronJob
-# - Dify는 bootstrap.sh에서 별도 install_dify 로 실행
+# RAG stack install: single run of install.sh sets up everything (re-runnable after uninstall)
+# - Namespace rag, Qdrant (Helm), collections, RAG backend/frontend, Ingress, Ingestion CronJob
+# - Dify is installed separately via bootstrap.sh install_dify
 
 #set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
-# prop (harbor/minio 패턴): /root/.k8s/project 에서 project, domain 등 읽기
+# prop (harbor/minio pattern): read project, domain from /root/.k8s/project
 if [[ -f /root/.bashrc ]]; then
   source /root/.bashrc
 fi
@@ -43,12 +43,12 @@ helm repo update
 helm upgrade --install qdrant qdrant/qdrant -n "${NS}" -f qdrant-values.yaml --wait --timeout 120s 2>/dev/null || \
   helm upgrade --install qdrant qdrant/qdrant -n "${NS}" -f qdrant-values.yaml
 
-echo "[3/7] Qdrant Pod 대기"
+echo "[3/7] Wait for Qdrant Pod"
 kubectl wait --for=condition=ready pod -l "app.kubernetes.io/name=qdrant" -n "${NS}" --timeout=180s 2>/dev/null || \
   kubectl wait --for=condition=ready pod -l "app=qdrant" -n "${NS}" --timeout=180s 2>/dev/null || \
   sleep 30
 
-echo "[4/7] Qdrant 컬렉션 생성 (rag_docs_cointutor, rag_docs_drillquiz)"
+echo "[4/7] Create Qdrant collections (rag_docs_cointutor, rag_docs_drillquiz)"
 kubectl delete job qdrant-collection-init -n "${NS}" --ignore-not-found=true
 kubectl apply -f qdrant-collection-init.yaml -n "${NS}"
 kubectl wait --for=condition=complete job/qdrant-collection-init -n "${NS}" --timeout=120s 2>/dev/null || sleep 15
@@ -58,17 +58,17 @@ kubectl apply -f cointutor/rag-backend.yaml -n "${NS}"
 kubectl apply -f drillquiz/rag-backend-drillquiz.yaml -n "${NS}"
 kubectl apply -f rag-frontend.yaml -n "${NS}"
 
-echo "[5b/7] HPA (min=1, max=1 기본)"
+echo "[5b/7] HPA (default min=1, max=1)"
 kubectl apply -f rag-hpa.yaml -n "${NS}" 2>/dev/null || true
 
-echo "[5c/7] ResourceQuota (rag 네임스페이스 상한)"
+echo "[5c/7] ResourceQuota (rag namespace limits)"
 kubectl apply -f rag-resource-quota.yaml -n "${NS}" 2>/dev/null || true
 
 echo "[6/7] Ingress (rag, rag-ui)"
 sed -e "s/k8s_project/${k8s_project}/g" -e "s/k8s_domain/${k8s_domain}/g" rag-ingress.yaml > rag-ingress.yaml_bak
 kubectl apply -f rag-ingress.yaml_bak -n "${NS}"
 
-echo "[7/7] Ingestion (ConfigMap + CronJob 분리: cointutor, drillquiz)"
+echo "[7/7] Ingestion (ConfigMap + CronJob: cointutor, drillquiz)"
 if [[ -f "${SCRIPT_DIR}/scripts/ingest.py" ]]; then
   kubectl create configmap rag-ingestion-script --from-file="${SCRIPT_DIR}/scripts/ingest.py" -n "${NS}" --dry-run=client -o yaml | kubectl apply -f -
 fi
@@ -76,18 +76,18 @@ kubectl apply -f cointutor/rag-ingestion-cronjob-cointutor.yaml -n "${NS}"
 kubectl apply -f drillquiz/rag-ingestion-cronjob-drillquiz.yaml -n "${NS}"
 
 echo ""
-echo "=== RAG 스택 설치 완료 ==="
+echo "=== RAG stack install complete ==="
 echo "  Namespace: ${NS}"
 echo "  Backend:   rag.default.${k8s_project}.${k8s_domain}, rag.${k8s_domain}"
 echo "  Frontend:  rag-ui.default.${k8s_project}.${k8s_domain}, rag-ui.${k8s_domain}"
 echo "  Qdrant:    kubectl -n ${NS} port-forward svc/qdrant 6333:6333"
-echo "  MinIO:     devops 네임스페이스 (rag-docs 버킷은 콘솔에서 생성)"
-echo "  인덱서:    Secret rag-ingestion-secret-cointutor, rag-ingestion-secret-drillquiz 생성 후 Job/CronJob 사용 (docs/rag-multi-topic.md 참고)"
+echo "  MinIO:     devops namespace (create rag-docs bucket via console)"
+echo "  Indexer:   Create Secret rag-ingestion-secret-cointutor, rag-ingestion-secret-drillquiz then use Job/CronJob (see docs/rag-multi-topic.md)"
 kubectl get pods,svc,ingress,cronjob -n "${NS}" 2>/dev/null || true
 if ! kubectl get secret rag-ingestion-secret-cointutor -n "${NS}" &>/dev/null || ! kubectl get secret rag-ingestion-secret-drillquiz -n "${NS}" &>/dev/null; then
   echo ""
-  echo "⚠️  Secret rag-ingestion-secret-cointutor 또는 rag-ingestion-secret-drillquiz 가 없어 Backend Pod이 CreateContainerConfigError 상태입니다."
-  echo "   아래처럼 두 개 생성 후 Pod이 자동으로 기동됩니다 (README.md 참고)."
+  echo "⚠️  Missing Secret rag-ingestion-secret-cointutor or rag-ingestion-secret-drillquiz; Backend Pods will be in CreateContainerConfigError."
+  echo "   Create both as below, then Pods will start (see README.md)."
   echo "   MINIO_USER=\$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)"
   echo "   MINIO_PASS=\$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)"
   echo "   kubectl create secret generic rag-ingestion-secret-cointutor -n ${NS} --from-literal=MINIO_ACCESS_KEY=\"\$MINIO_USER\" --from-literal=MINIO_SECRET_KEY=\"\$MINIO_PASS\" --from-literal=GEMINI_API_KEY='YOUR_GEMINI_KEY'"

@@ -1,19 +1,19 @@
-# DrillQuiz RAG 백엔드 OpenAPI 스키마 (Dify 커스텀 도구용)
-# "커스텀 도구 만들기" → 이름 "DrillQuiz RAG", 스키마 칸에 이 내용 붙여넣기
-# DrillQuiz 전용: rag-backend-drillquiz(rag_docs_drillquiz) 호출
+# DrillQuiz RAG backend OpenAPI schema (for Dify custom tool)
+# In Dify "Create custom tool" → name "DrillQuiz RAG", paste this into the schema field
+# DrillQuiz only: calls rag-backend-drillquiz (rag_docs_drillquiz)
 openapi: 3.0.0
 info:
   title: DrillQuiz RAG API
-  description: DrillQuiz 전용 RAG 검색 API (Qdrant rag_docs_drillquiz)
+  description: DrillQuiz RAG search API (Qdrant rag_docs_drillquiz)
   version: 1.0.0
 servers:
   - url: http://rag-backend-drillquiz.rag.svc.cluster.local:8000
-    description: DrillQuiz RAG Backend (K8s 내부)
+    description: DrillQuiz RAG Backend (in-cluster)
 paths:
   /query:
     post:
-      summary: 질문으로 DrillQuiz 지식 검색
-      description: 사용자 질문으로 rag_docs_drillquiz 벡터 검색 후 관련 청크 목록 반환
+      summary: Search DrillQuiz knowledge by question
+      description: Vector search on rag_docs_drillquiz with user question, returns related chunks
       operationId: query
       requestBody:
         required: true
@@ -26,14 +26,14 @@ paths:
               properties:
                 question:
                   type: string
-                  description: 사용자 질문
+                  description: User question
                 top_k:
                   type: integer
                   default: 5
-                  description: 반환할 결과 개수
+                  description: Number of results to return
       responses:
         "200":
-          description: 검색 결과
+          description: Search results
           content:
             application/json:
               schema:
@@ -56,7 +56,7 @@ paths:
                           type: number
   /health:
     get:
-      summary: 헬스체크
+      summary: Health check
       operationId: health
       responses:
         "200":

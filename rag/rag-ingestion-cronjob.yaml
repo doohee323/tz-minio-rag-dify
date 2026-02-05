@@ -1,5 +1,5 @@
-# CronJob: MinIO raw/ -> 청킹 -> 임베딩 -> Qdrant rag_docs (주기 실행)
-# 스케줄: 매일 02:00. Secret rag-ingestion-secret, ConfigMap rag-ingestion-script 필요.
+# CronJob: MinIO raw/ -> chunking -> embedding -> Qdrant rag_docs (scheduled)
+# Schedule: daily 02:00. Requires Secret rag-ingestion-secret, ConfigMap rag-ingestion-script.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -44,7 +44,7 @@ spec:
               value: "6333"
             - name: QDRANT_COLLECTION
               value: "rag_docs"
-            # OpenAI: value "openai". Gemini: value "gemini", Secret에 GEMINI_API_KEY
+            # OpenAI: value "openai". Gemini: value "gemini", Secret has GEMINI_API_KEY
             - name: EMBEDDING_PROVIDER
               value: "gemini"
             - name: EMBEDDING_MODEL

@@ -37,10 +37,10 @@
 </template>
 
 <script>
-// 채팅은 chat-gateway가 처리. 토큰·다국어(ui) 모두 API에서 받음.
-// env-frontend 또는 .env: VUE_APP_CHAT_GATEWAY_URL, VUE_APP_CHAT_GATEWAY_API_KEY
-// CI: env-frontend의 VUE_APP_CHAT_GATEWAY_API_KEY=CHAT_GATEWAY_API_KEY_PLACEHOLDER → Jenkins/ci/k8s.sh에서 치환
-// user_id: 로그인 시 username, 비로그인 시 'anonymous'
+// Chat is handled by chat-gateway. Token from API (no i18n).
+// env-frontend or .env: VUE_APP_CHAT_GATEWAY_URL, VUE_APP_CHAT_GATEWAY_API_KEY
+// CI: VUE_APP_CHAT_GATEWAY_API_KEY=CHAT_GATEWAY_API_KEY_PLACEHOLDER in env-frontend → replaced by Jenkins/ci/k8s.sh
+// user_id: username when logged in, 'anonymous' when not
 import authService from '@/services/authService'
 
 export default {
@@ -54,14 +54,13 @@ export default {
       apiKey,
       systemId: (process.env.VUE_APP_CHAT_GATEWAY_SYSTEM_ID || 'drillquiz').trim(),
       chatToken: null,
-      chatUi: null,
       loadError: null,
       unsubscribeAuth: null
     }
   },
   computed: {
     chatT() {
-      return this.chatUi || {
+      return {
         title: 'Chat',
         close: 'Close',
         open: 'Open chat',
@@ -69,28 +68,22 @@ export default {
         loading: 'Loading...'
       }
     },
-    chatLang() {
-      const locale = (this.$i18n && this.$i18n.locale) ? this.$i18n.locale : 'en'
-      const allowed = ['en', 'es', 'ko', 'zh', 'ja']
-      return allowed.includes(locale) ? locale : 'en'
-    },
     iframeSrc() {
       if (!this.chatToken) return ''
-      return `${this.chatGatewayUrl}/chat?token=${encodeURIComponent(this.chatToken)}&embed=1&lang=${encodeURIComponent(this.chatLang)}`
+      return `${this.chatGatewayUrl}/chat?token=${encodeURIComponent(this.chatToken)}&embed=1`
     }
   },
   mounted() {
-    // 키 설정 위치 안내 (키 값은 로그하지 않음)
+    // Where to set the API key (do not log the key value)
     console.log(
-      '[ChatWidget] 채팅 API 키 설정: 프로젝트 루트의 env-frontend 파일에 다음 변수를 추가한 뒤 "npm run serve" 재시작.',
-      '\n  - VUE_APP_CHAT_GATEWAY_URL (선택, 기본: http://localhost:8088)',
-      '\n  - VUE_APP_CHAT_GATEWAY_API_KEY (필수, 게이트웨이에서 발급한 키)',
-      '\n  - VUE_APP_CHAT_GATEWAY_SYSTEM_ID (선택, 기본: drillquiz)',
-      '\n  현재 API 키 설정 여부:', this.apiKey ? '설정됨' : '미설정'
+      '[ChatWidget] Chat API key: add the following to env-frontend at project root, then restart "npm run serve".',
+      '\n  - VUE_APP_CHAT_GATEWAY_URL (optional, default: http://localhost:8088)',
+      '\n  - VUE_APP_CHAT_GATEWAY_API_KEY (required, key issued by gateway)',
+      '\n  - VUE_APP_CHAT_GATEWAY_SYSTEM_ID (optional, default: drillquiz)',
+      '\n  API key configured:', this.apiKey ? 'yes' : 'no'
     )
     this.unsubscribeAuth = authService.subscribe(() => {
       this.chatToken = null
-      this.chatUi = null
     })
   },
   beforeDestroy() {
@@ -109,9 +102,8 @@ export default {
         return
       }
       const userId = this.getChatUserId()
-      const lang = this.chatLang
       try {
-        const url = `${this.chatGatewayUrl}/v1/chat-token?system_id=${encodeURIComponent(this.systemId)}&user_id=${encodeURIComponent(userId)}&lang=${encodeURIComponent(lang)}`
+        const url = `${this.chatGatewayUrl}/v1/chat-token?system_id=${encodeURIComponent(this.systemId)}&user_id=${encodeURIComponent(userId)}`
         const res = await fetch(url, { headers: { 'X-API-Key': this.apiKey } })
         if (!res.ok) {
           const text = await res.text()
@@ -120,7 +112,6 @@ export default {
         const data = await res.json()
         this.chatToken = data.token || null
         if (!this.chatToken) throw new Error('No token in response')
-        this.chatUi = data.ui || null
       } catch (e) {
         this.loadError = e.message || 'Unknown error'
       }

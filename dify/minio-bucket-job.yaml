@@ -1,4 +1,4 @@
-# MinIO 버킷 "dify" 생성 (1회 Job). dify-minio-secret 존재 시 install.sh에서 적용
+# Create MinIO bucket "dify" (one-time Job). Applied by install.sh when dify-minio-secret exists
 apiVersion: batch/v1
 kind: Job
 metadata:

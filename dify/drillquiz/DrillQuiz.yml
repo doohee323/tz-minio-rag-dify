@@ -226,25 +226,25 @@ workflow:
           default: null
           form: llm
           human_description:
-            en_US: 사용자 질문
-            ja_JP: 사용자 질문
-            pt_BR: 사용자 질문
-            zh_Hans: 사용자 질문
+            en_US: User question
+            ja_JP: User question
+            pt_BR: User question
+            zh_Hans: User question
           label:
             en_US: question
             ja_JP: question
             pt_BR: question
             zh_Hans: question
-          llm_description: 사용자 질문
+          llm_description: User question
           max: null
           min: null
           name: question
           options: []
           placeholder:
-            en_US: 사용자 질문
-            ja_JP: 사용자 질문
-            pt_BR: 사용자 질문
-            zh_Hans: 사용자 질문
+            en_US: User question
+            ja_JP: User question
+            pt_BR: User question
+            zh_Hans: User question
           precision: null
           required: true
           scope: null
@@ -254,25 +254,25 @@ workflow:
           default: 5
           form: llm
           human_description:
-            en_US: 반환할 결과 개수
-            ja_JP: 반환할 결과 개수
-            pt_BR: 반환할 결과 개수
-            zh_Hans: 반환할 결과 개수
+            en_US: Number of results to return
+            ja_JP: Number of results to return
+            pt_BR: Number of results to return
+            zh_Hans: Number of results to return
           label:
             en_US: top_k
             ja_JP: top_k
             pt_BR: top_k
             zh_Hans: top_k
-          llm_description: 반환할 결과 개수
+          llm_description: Number of results to return
           max: null
           min: null
           name: top_k
           options: []
           placeholder:
-            en_US: 반환할 결과 개수
-            ja_JP: 반환할 결과 개수
-            pt_BR: 반환할 결과 개수
-            zh_Hans: 반환할 결과 개수
+            en_US: Number of results to return
+            ja_JP: Number of results to return
+            pt_BR: Number of results to return
+            zh_Hans: Number of results to return
           precision: null
           required: false
           scope: null
@@ -292,7 +292,7 @@ workflow:
         selected: false
         title: query
         tool_configurations: {}
-        tool_description: 사용자 질문으로 벡터 검색 후 관련 청크 목록 반환
+        tool_description: Vector search with user question, returns list of related chunks
         tool_label: query
         tool_name: query
         tool_node_version: '2'

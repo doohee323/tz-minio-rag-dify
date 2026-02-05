@@ -1,27 +1,27 @@
-# RAG 주제별 분리 (CoinTutor / DrillQuiz)
+# RAG separation by topic (CoinTutor / DrillQuiz)
 
-MinIO `rag-docs` 안의 문서를 주제별로 나누고, **컬렉션 이름 통일(선택 B)** + **Job/CronJob 분리** + **백엔드 2개 배포(방법 A)** 로 완전 분리하는 방법입니다.
+How to split documents in MinIO `rag-docs` by topic and fully separate using **unified collection names (option B)** + **separate Job/CronJob** + **two backends (approach A)**.
 
 ---
 
-## 1. 분리 전략 요약
+## 1. Separation strategy summary
 
-| 구분 | CoinTutor | DrillQuiz |
+| Item | CoinTutor | DrillQuiz |
 |------|-----------|-----------|
-| **MinIO 경로** | `rag-docs/raw/cointutor/` | `rag-docs/raw/drillquiz/` |
-| **Qdrant 컬렉션** | `rag_docs_cointutor` | `rag_docs_drillquiz` |
-| **인덱싱 Job** | `rag-ingestion-job-cointutor` | `rag-ingestion-job-drillquiz` |
-| **인덱싱 CronJob** | `rag-ingestion-cronjob-cointutor` | `rag-ingestion-cronjob-drillquiz` |
+| **MinIO path** | `rag-docs/raw/cointutor/` | `rag-docs/raw/drillquiz/` |
+| **Qdrant collection** | `rag_docs_cointutor` | `rag_docs_drillquiz` |
+| **Indexing Job** | `rag-ingestion-job-cointutor` | `rag-ingestion-job-drillquiz` |
+| **Indexing CronJob** | `rag-ingestion-cronjob-cointutor` | `rag-ingestion-cronjob-drillquiz` |
 | **RAG Backend** | `rag-backend` (COLLECTION=rag_docs_cointutor) | `rag-backend-drillquiz` (COLLECTION=rag_docs_drillquiz) |
-| **Dify 도구 URL** | `http://rag-backend.rag.svc.cluster.local:8000/query` | `http://rag-backend-drillquiz.rag.svc.cluster.local:8000/query` |
+| **Dify tool URL** | `http://rag-backend.rag.svc.cluster.local:8000/query` | `http://rag-backend-drillquiz.rag.svc.cluster.local:8000/query` |
 
-- **컬렉션**: 기존 `rag_docs` 는 사용하지 않고, `rag_docs_cointutor` / `rag_docs_drillquiz` 만 사용(선택 B).
-- **Job/CronJob**: 주제별로 별도 YAML로 분리.
-- **백엔드**: 방법 A — 백엔드 2개 배포로 완전 분리.
+- **Collections**: Do not use existing `rag_docs`; use only `rag_docs_cointutor` / `rag_docs_drillquiz` (option B).
+- **Job/CronJob**: Separate YAML per topic.
+- **Backends**: Approach A — two backend deployments for full separation.
 
 ---
 
-## 2. MinIO 폴더 구조
+## 2. MinIO folder structure
 
 ```
 rag-docs/
@@ -34,137 +34,137 @@ rag-docs/
       GUIDE.md
 ```
 
-- **CoinTutor 소스 문서**: `tz-local/resource/rag/cointutor/` 에 `USE_CASES.md`, `USER_GUIDE.md`, `CoinTutor.yml`(Dify 앱 템플릿) 위치. `.md` 파일은 MinIO `rag-docs/raw/cointutor/` 에 업로드 후 인덱싱.
-- DrillQuiz 문서: `raw/drillquiz/` 에만 업로드.
+- **CoinTutor source docs**: In `tz-local/resource/rag/cointutor/` — `USE_CASES.md`, `USER_GUIDE.md`, `CoinTutor.yml` (Dify app template). Upload `.md` to MinIO `rag-docs/raw/cointutor/` then index.
+- DrillQuiz docs: Upload only under `raw/drillquiz/`.
 
 ---
 
-## 3. Qdrant 컬렉션 (선택 B: 이름 통일)
+## 3. Qdrant collections (option B: unified names)
 
-주제마다 컬렉션 1개씩, 벡터 1536·Cosine.
+One collection per topic; vector size 1536, Cosine.
 
-- **rag_docs_cointutor**: CoinTutor 전용.
-- **rag_docs_drillquiz**: DrillQuiz 전용.
-- 기존 `rag_docs` 는 사용하지 않음. 필요 시 데이터를 `rag_docs_cointutor` 로 재인덱싱 후 `rag_docs` 삭제.
+- **rag_docs_cointutor**: CoinTutor only.
+- **rag_docs_drillquiz**: DrillQuiz only.
+- Do not use existing `rag_docs`. If needed, re-index into `rag_docs_cointutor` then delete `rag_docs`.
 
-`qdrant-collection-init.yaml`(또는 install.sh)에서 위 두 컬렉션을 생성하도록 되어 있음.
+`qdrant-collection-init.yaml` (or install.sh) is set up to create these two collections.
 
 ---
 
-## 4. 인덱싱 Job / CronJob 분리
+## 4. Indexing Job / CronJob separation
 
-같은 `ingest.py`·ConfigMap을 쓰고, **환경 변수만** 주제별로 다르게 합니다.
+Same `ingest.py` and ConfigMap; only **environment variables** differ per topic.
 
 ### 4.1 CoinTutor
 
-| 리소스 | MINIO_PREFIX | QDRANT_COLLECTION |
-|--------|--------------|-------------------|
+| Resource | MINIO_PREFIX | QDRANT_COLLECTION |
+|----------|--------------|-------------------|
 | Job | `raw/cointutor/` | `rag_docs_cointutor` |
 | CronJob | `raw/cointutor/` | `rag_docs_cointutor` |
 
 - **Job**: `kubectl apply -f rag-ingestion-job-cointutor.yaml`
-- **1회 수동 실행**: `kubectl create job -n rag ingest-cointutor-1 --from=cronjob/rag-ingestion-cronjob-cointutor`
+- **One-off run**: `kubectl create job -n rag ingest-cointutor-1 --from=cronjob/rag-ingestion-cronjob-cointutor`
 
 ### 4.2 DrillQuiz
 
-| 리소스 | MINIO_PREFIX | QDRANT_COLLECTION |
-|--------|--------------|-------------------|
+| Resource | MINIO_PREFIX | QDRANT_COLLECTION |
+|----------|--------------|-------------------|
 | Job | `raw/drillquiz/` | `rag_docs_drillquiz` |
 | CronJob | `raw/drillquiz/` | `rag_docs_drillquiz` |
 
 - **Job**: `kubectl apply -f rag-ingestion-job-drillquiz.yaml`
-- **1회 수동 실행**: `kubectl create job -n rag ingest-drillquiz-1 --from=cronjob/rag-ingestion-cronjob-drillquiz`
+- **One-off run**: `kubectl create job -n rag ingest-drillquiz-1 --from=cronjob/rag-ingestion-cronjob-drillquiz`
 
 ---
 
-## 5. 방법 A: 백엔드 2개 배포 (완전 분리)
+## 5. Approach A: two backends (full separation)
 
-주제별로 **별도 Deployment + Service** 를 두어, URL 단위로 완전히 분리합니다.
+Separate **Deployment + Service** per topic so separation is by URL.
 
-### 5.1 CoinTutor 백엔드
+### 5.1 CoinTutor backend
 
-| 항목 | 내용 |
-|------|------|
-| **Deployment** | `rag-backend` (기존) |
+| Item | Description |
+|------|--------------|
+| **Deployment** | `rag-backend` (existing) |
 | **Service** | `rag-backend` (port 8000) |
-| **환경 변수** | `QDRANT_COLLECTION=rag_docs_cointutor` |
-| **URL (클러스터 내)** | `http://rag-backend.rag.svc.cluster.local:8000` |
+| **Env** | `QDRANT_COLLECTION=rag_docs_cointutor` |
+| **URL (in-cluster)** | `http://rag-backend.rag.svc.cluster.local:8000` |
 
-- Dify CoinTutor RAG 도구: 위 URL + `POST /query` (body: `question`, `top_k` 만 사용해도 됨).
+- Dify CoinTutor RAG tool: above URL + `POST /query` (body: `question`, `top_k` is enough).
 
-### 5.2 DrillQuiz 백엔드
+### 5.2 DrillQuiz backend
 
-| 항목 | 내용 |
-|------|------|
+| Item | Description |
+|------|--------------|
 | **Deployment** | `rag-backend-drillquiz` |
 | **Service** | `rag-backend-drillquiz` (port 8000) |
-| **환경 변수** | `QDRANT_COLLECTION=rag_docs_drillquiz` |
-| **URL (클러스터 내)** | `http://rag-backend-drillquiz.rag.svc.cluster.local:8000` |
+| **Env** | `QDRANT_COLLECTION=rag_docs_drillquiz` |
+| **URL (in-cluster)** | `http://rag-backend-drillquiz.rag.svc.cluster.local:8000` |
 
-- Dify DrillQuiz RAG 도구: 위 URL + `POST /query` (body: `question`, `top_k`).
+- Dify DrillQuiz RAG tool: above URL + `POST /query` (body: `question`, `top_k`).
 
-### 5.3 공통 사항
+### 5.3 Common
 
-- CoinTutor 백엔드는 ConfigMap `rag-backend-script`, DrillQuiz 백엔드는 ConfigMap `rag-backend-drillquiz-script`를 각각 사용(주제별 분리). 스크립트는 `COLLECTION` 환경 변수를 읽어 해당 컬렉션만 검색.
-- Secret: CoinTutor는 `rag-ingestion-secret-cointutor`, DrillQuiz는 `rag-ingestion-secret-drillquiz` 사용 (주제별 분리, 내용은 동일해도 됨).
+- CoinTutor backend uses ConfigMap `rag-backend-script`, DrillQuiz uses `rag-backend-drillquiz-script` (per topic). Scripts read `COLLECTION` env and query only that collection.
+- Secrets: CoinTutor `rag-ingestion-secret-cointutor`, DrillQuiz `rag-ingestion-secret-drillquiz` (per topic; contents can be the same).
 
-### 5.4 Dify 연결
+### 5.4 Dify connection
 
-- **CoinTutor 챗봇** → 커스텀 도구 **CoinTutor RAG** → `http://rag-backend.rag.svc.cluster.local:8000/query`
-- **DrillQuiz 챗봇** → 커스텀 도구 **DrillQuiz RAG** → `http://rag-backend-drillquiz.rag.svc.cluster.local:8000/query`
+- **CoinTutor chatbot** → custom tool **CoinTutor RAG** → `http://rag-backend.rag.svc.cluster.local:8000/query`
+- **DrillQuiz chatbot** → custom tool **DrillQuiz RAG** → `http://rag-backend-drillquiz.rag.svc.cluster.local:8000/query`
 
-서로 다른 백엔드 URL이므로 트래픽·배포가 완전히 분리됩니다.
+Different backend URLs keep traffic and deployment fully separate.
 
 ---
 
-## 6. 방법 B (참고): 백엔드 1개 + 요청 파라미터
+## 6. Approach B (reference): single backend + request parameter
 
-백엔드 한 개만 두고 `/query` 요청에 `collection` 파라미터로 컬렉션을 지정하는 방식입니다.  
-운영을 더 단순하게 가져가고 싶을 때만 고려합니다.
+Use one backend and pass collection via a `collection` parameter on `/query`.  
+Consider only if you want simpler operations.
 
 - `POST /query` body: `{ "question": "...", "top_k": 5, "collection": "rag_docs_drillquiz" }`
-- Dify에서 도구별로 `collection` 값을 다르게 넣어 호출.
+- In Dify, set different `collection` values per tool.
 
-현재 리포지터리에서는 **방법 A(백엔드 2개)** 를 기준으로 Job·CronJob·문서를 정리해 두었습니다.
-
----
-
-## 7. Dify DrillQuiz 챗봇
-
-1. **커스텀 도구**: OpenAPI 스키마에서 **server URL** 만 `http://rag-backend-drillquiz.rag.svc.cluster.local:8000` 로 두고, 나머지는 CoinTutor RAG와 동일한 구조로 **DrillQuiz RAG** 등록.
-2. **앱**: 새 채팅 플로우(예: DrillQuiz) 생성.
-3. **워크플로**: Start → (선택) 질문 분류 → **도구(DrillQuiz RAG)** → LLM → Answer. `question` = `sys.query`.
+This repo is organized around **approach A (two backends)** for Job, CronJob, and docs.
 
 ---
 
-## 8. RAG 컬렉션 초기화
+## 7. Dify DrillQuiz chatbot
 
-벡터 데이터를 비우고 다시 인덱싱하려면 `tz-local/resource/rag/reset-rag-collections.sh` 를 사용합니다.
+1. **Custom tool**: In OpenAPI schema set **server URL** to `http://rag-backend-drillquiz.rag.svc.cluster.local:8000`; keep the rest like CoinTutor RAG and register **DrillQuiz RAG**.
+2. **App**: Create a new chat flow (e.g. DrillQuiz).
+3. **Workflow**: Start → (optional) question classification → **tool (DrillQuiz RAG)** → LLM → Answer. `question` = `sys.query`.
+
+---
+
+## 8. RAG collection reset
+
+Use `tz-local/resource/rag/reset-rag-collections.sh` to clear vector data and re-index.
 
 ```bash
 cd tz-local/resource/rag
 ./reset-rag-collections.sh [cointutor|drillquiz|all] [reindex]
 ```
 
-| 인자 | 설명 |
-|------|------|
-| `all` (기본) | rag_docs_cointutor, rag_docs_drillquiz 둘 다 삭제 후 재생성 |
-| `cointutor` | rag_docs_cointutor 만 초기화 |
-| `drillquiz` | rag_docs_drillquiz 만 초기화 |
-| `reindex` (두 번째 인자) | 초기화 후 해당 주제 인덱싱 Job 1회 실행 |
+| Argument | Description |
+|----------|-------------|
+| `all` (default) | Delete and recreate both rag_docs_cointutor and rag_docs_drillquiz |
+| `cointutor` | Reset only rag_docs_cointutor |
+| `drillquiz` | Reset only rag_docs_drillquiz |
+| `reindex` (second arg) | After reset, run indexing Job once for that topic |
 
-예: `./reset-rag-collections.sh cointutor reindex` — CoinTutor 컬렉션 초기화 후 인덱싱 Job 실행.
+Example: `./reset-rag-collections.sh cointutor reindex` — reset CoinTutor collection then run indexing Job.
 
-**MinIO에서 파일을 지워도 RAG에 결과가 남는 이유**: 인덱서(ingest.py)는 기존에 **upsert만** 하고 Qdrant에서 삭제하지 않았음. 그래서 MinIO에서 파일을 지우고 Job을 다시 돌려도 **기존 벡터가 그대로 남음**. 현재 ingest.py는 **실행 시 해당 컬렉션을 삭제 후 재생성**한 뒤, MinIO에 있는 파일만 upsert하도록 수정되어 있음. MinIO에서 파일을 지운 뒤 Job을 다시 실행하면 컬렉션이 비워진 뒤 현재 MinIO 객체만 반영됨.
+**Why RAG still shows results after deleting files in MinIO**: The indexer (ingest.py) used to only **upsert** and did not delete from Qdrant, so re-running the Job after removing files in MinIO left **existing vectors**. The current ingest.py **drops and recreates the collection** on run, then upserts only files present in MinIO. After deleting files in MinIO and re-running the Job, the collection is cleared and only current MinIO objects are reflected.
 
 ---
 
-## 9. 체크리스트
+## 9. Checklist
 
-- [ ] MinIO `rag-docs/raw/cointutor/`, `raw/drillquiz/` 에 문서 업로드
-- [ ] Qdrant 컬렉션 `rag_docs_cointutor`, `rag_docs_drillquiz` 생성 (install 또는 수동)
-- [ ] CoinTutor Job/CronJob 적용 후 1회 인덱싱 실행
-- [ ] DrillQuiz Job/CronJob 적용 후 1회 인덱싱 실행
-- [ ] RAG Backend(rag-backend), RAG Backend DrillQuiz(rag-backend-drillquiz) 배포
-- [ ] Dify: CoinTutor RAG 도구(rag-backend URL), DrillQuiz RAG 도구(rag-backend-drillquiz URL) 등록 후 각 챗봇에 연결
-- [ ] 초기화 필요 시: `tz-local/resource/rag/reset-rag-collections.sh` 사용
+- [ ] Upload docs to MinIO `rag-docs/raw/cointutor/`, `raw/drillquiz/`
+- [ ] Create Qdrant collections `rag_docs_cointutor`, `rag_docs_drillquiz` (install or manual)
+- [ ] Apply CoinTutor Job/CronJob and run indexing once
+- [ ] Apply DrillQuiz Job/CronJob and run indexing once
+- [ ] Deploy RAG Backend (rag-backend) and RAG Backend DrillQuiz (rag-backend-drillquiz)
+- [ ] In Dify: register CoinTutor RAG tool (rag-backend URL) and DrillQuiz RAG tool (rag-backend-drillquiz URL), then attach to each chatbot
+- [ ] When reset is needed: use `tz-local/resource/rag/reset-rag-collections.sh`

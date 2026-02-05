@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>대화 캐시 조회</title>
+  <title>Conversation cache</title>
   <style>
     body { font-family: system-ui, sans-serif; margin: 1rem; }
     .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
@@ -24,38 +24,38 @@
   </style>
 </head>
 <body>
-  <h1>대화 캐시 조회</h1>
-  <p class="empty">시스템·사용자·기간으로 동기화된 대화를 조회합니다. API Key가 필요합니다.</p>
+  <h1>Conversation cache</h1>
+  <p class="empty">Query synced conversations by system, user, and date range. API Key required.</p>
 
   <div class="filters">
     <label>API Key <input type="password" id="apiKey" placeholder="X-API-Key" value="{{ api_key }}"></label>
-    <label>시스템 <input type="text" id="systemId" placeholder="예: cointutor"></label>
-    <label>사용자 <input type="text" id="userId" placeholder="예: 12345"></label>
-    <label>시작일 <input type="date" id="fromDate"></label>
-    <label>종료일 <input type="date" id="toDate"></label>
-    <button type="button" id="btnSearch">조회</button>
+    <label>System <input type="text" id="systemId" placeholder="e.g. cointutor"></label>
+    <label>User <input type="text" id="userId" placeholder="e.g. 12345"></label>
+    <label>From <input type="date" id="fromDate"></label>
+    <label>To <input type="date" id="toDate"></label>
+    <button type="button" id="btnSearch">Search</button>
   </div>
 
   <div id="error" class="error"></div>
   <table id="tableConv">
     <thead>
       <tr>
-        <th>시스템</th>
-        <th>사용자</th>
-        <th>대화명</th>
-        <th>대화 시각</th>
-        <th>동기화 시각</th>
+        <th>System</th>
+        <th>User</th>
+        <th>Name</th>
+        <th>Created</th>
+        <th>Synced</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-  <p id="convEmpty" class="empty" style="display:none;">조건에 맞는 대화가 없습니다.</p>
+  <p id="convEmpty" class="empty" style="display:none;">No conversations match the filters.</p>
   <p id="convEmptyHint" class="empty" style="display:none; margin-top: 0.5rem;">
-    동기화된 대화가 없을 수 있습니다. (1) <strong>채팅 페이지</strong>(/chat?token=...)에서 대화한 뒤, 해당 탭을 열어두거나 닫으면 sync/me가 호출되어 DB에 저장됩니다. (2) 또는 <strong>POST /v1/sync</strong> (헤더 X-API-Key)를 호출하면 등록된 사용자 전체를 동기화합니다.
+    There may be no synced conversations yet. (1) Use the <strong>chat page</strong> (/chat?token=...) and keep or close the tab so sync/me runs and saves to DB. (2) Or call <strong>POST /v1/sync</strong> (header X-API-Key) to sync all registered users.
   </p>
 
   <div class="messages" id="messagesBox" style="display:none;">
-    <h3>메시지: <span id="convTitle"></span></h3>
+    <h3>Messages: <span id="convTitle"></span></h3>
     <div id="messagesList"></div>
   </div>
 
@@ -90,7 +90,7 @@
         const r = await fetch('/v1/cache/conversations?' + params.toString(), { headers: headers() });
         if (!r.ok) {
           const t = await r.text();
-          throw new Error(t || 'API key가 필요하거나 오류가 발생했습니다.');
+          throw new Error(t || 'API key required or an error occurred.');
         }
         const data = await r.json();
         tableBody.innerHTML = '';
@@ -124,16 +124,16 @@
       errorEl.textContent = '';
       try {
         const r = await fetch(`/v1/cache/conversations/${encodeURIComponent(conversationId)}/messages`, { headers: headers() });
-        if (!r.ok) throw new Error('메시지 조회 실패');
+        if (!r.ok) throw new Error('Failed to load messages');
         const data = await r.json();
         convTitle.textContent = title || conversationId;
         messagesBox.style.display = 'block';
         messagesList.innerHTML = data.length ? data.map(m => `
           <div class="message msg-${m.role}">
-            <strong>${m.role === 'user' ? '사용자' : '봇'}</strong> ${m.created_at ? formatDate(m.created_at) : ''}<br>
+            <strong>${m.role === 'user' ? 'User' : 'Bot'}</strong> ${m.created_at ? formatDate(m.created_at) : ''}<br>
             ${escapeHtml(m.content || '')}
           </div>
-        `).join('') : '<p class="empty">메시지 없음</p>';
+        `).join('') : '<p class="empty">No messages.</p>';
       } catch (e) {
         errorEl.textContent = e.message;
       }
@@ -147,7 +147,7 @@
     function formatDate(iso) {
       try {
         const d = new Date(iso);
-        return isNaN(d.getTime()) ? iso : d.toLocaleString('ko-KR');
+        return isNaN(d.getTime()) ? iso : d.toLocaleString();
       } catch (_) { return iso; }
     }
   </script>

@@ -1,5 +1,5 @@
-# Job: CoinTutor 전용 인덱싱 (MinIO raw/cointutor/ -> Qdrant rag_docs_cointutor)
-# Secret rag-ingestion-secret-cointutor, ConfigMap rag-ingestion-script 필요
+# Job: CoinTutor-only indexing (MinIO raw/cointutor/ -> Qdrant rag_docs_cointutor)
+# Requires Secret rag-ingestion-secret-cointutor, ConfigMap rag-ingestion-script
 apiVersion: batch/v1
 kind: Job
 metadata:

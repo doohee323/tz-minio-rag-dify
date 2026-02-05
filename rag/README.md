@@ -1,25 +1,25 @@
-# RAG 스택 + Dify (install.sh 기반)
+# RAG stack + Dify (install.sh based)
 
-`install.sh` 한 번 실행으로 **RAG**(Qdrant, 백엔드, 프론트, 인덱서)와 **Dify**까지 전체 구성. 삭제 후 재실행해도 동일하게 설치됨.
+Running `install.sh` once sets up the full stack: **RAG** (Qdrant, backend, frontend, indexer) and **Dify**. Re-running after uninstall produces the same setup.
 
-## 설치
+## Install
 
 ```bash
 cd tz-local/resource/rag
 bash install.sh
 ```
 
-- VM 내부: `/vagrant/tz-local/resource/rag/install.sh`
-- 로컬: `KUBECONFIG=~/.kube/topzone.iptime.org.config bash install.sh`
+- From inside VM: `/vagrant/tz-local/resource/rag/install.sh`
+- From local: `KUBECONFIG=~/.kube/topzone.iptime.org.config bash install.sh`
 
-### 설치 후 필수: Secret 생성 (주제별 분리)
+### Required after install: Create Secrets (per topic)
 
-RAG 백엔드와 인덱서 Job/CronJob은 주제별 Secret을 사용한다. `rag-ingestion-secret-cointutor`, `rag-ingestion-secret-drillquiz`가 없으면 Backend Pod이 기동하지 않고, 검색 시 `API key not valid` 오류가 난다. **설치 직후** 아래를 실행한다 (두 Secret 모두 동일한 값으로 생성해도 됨).
+RAG backends and indexer Job/CronJob use per-topic Secrets. Without `rag-ingestion-secret-cointutor` and `rag-ingestion-secret-drillquiz`, Backend Pods do not start and search returns `API key not valid`. **Run the following right after install** (both Secrets can use the same values).
 
 ```bash
 MINIO_USER=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)
 MINIO_PASS=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)
-GEMINI_KEY='여기에_유효한_Gemini_API_키'
+GEMINI_KEY='your_valid_Gemini_API_key_here'
 
 kubectl create secret generic rag-ingestion-secret-cointutor -n rag \
   --from-literal=MINIO_ACCESS_KEY="$MINIO_USER" \
@@ -34,55 +34,55 @@ kubectl create secret generic rag-ingestion-secret-drillquiz -n rag \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-- `GEMINI_API_KEY`는 [Google AI Studio](https://aistudio.google.com/apikey)에서 발급. **반드시 실제 키로** `'여기에_유효한_Gemini_API_키'` 를 치환한다.
-- 시크릿을 **이미 기동 중인 Pod 이후에** 수정했다면, Backend를 재시작해야 새 키가 적용된다:
+- Get `GEMINI_API_KEY` from [Google AI Studio](https://aistudio.google.com/apikey). **Replace** `'your_valid_Gemini_API_key_here'` with a real key.
+- If you change the Secret **after** Pods are already running, restart the Backends for the new key to apply:
   ```bash
   kubectl rollout restart deployment/rag-backend deployment/rag-backend-drillquiz -n rag
   ```
 
-## 삭제 (전체 자원 제거)
+## Uninstall (remove all resources)
 
 ```bash
 cd tz-local/resource/rag
 ./uninstall.sh
 ```
 
-- **Dify**: Ingress → Helm → namespace `dify` 삭제 (사용자·앱 데이터 포함 초기화).
-- **RAG**: Ingress → CronJob/Job → Backend/Frontend → Qdrant(Helm) → namespace `rag` 삭제.
-- 재설치: `./install.sh`
+- **Dify**: Removes Ingress → Helm → namespace `dify` (resets user and app data).
+- **RAG**: Removes Ingress → CronJob/Job → Backend/Frontend → Qdrant(Helm) → namespace `rag`.
+- Reinstall: `./install.sh`
 
-## 구성 요소
+## Components
 
-**주제별 폴더**: CoinTutor / DrillQuiz 분리 (docs/rag-multi-topic.md 참고)
+**Per-topic folders**: CoinTutor / DrillQuiz separation (see docs/rag-multi-topic.md)
 
-| 경로 | 내용 |
-|------|------|
-| `cointutor/rag-backend.yaml` | CoinTutor 백엔드 (rag_docs_cointutor) |
-| `cointutor/rag-ingestion-job-cointutor.yaml` | CoinTutor 인덱싱 Job (raw/cointutor/ → rag_docs_cointutor) |
-| `cointutor/rag-ingestion-cronjob-cointutor.yaml` | CoinTutor CronJob (매일 02:00) |
-| `drillquiz/rag-backend-drillquiz.yaml` | DrillQuiz 백엔드 (rag_docs_drillquiz) |
-| `drillquiz/rag-ingestion-job-drillquiz.yaml` | DrillQuiz 인덱싱 Job (raw/drillquiz/ → rag_docs_drillquiz) |
-| `drillquiz/rag-ingestion-cronjob-drillquiz.yaml` | DrillQuiz CronJob (매일 02:30) |
+| Path | Description |
+|------|-------------|
+| `cointutor/rag-backend.yaml` | CoinTutor backend (rag_docs_cointutor) |
+| `cointutor/rag-ingestion-job-cointutor.yaml` | CoinTutor indexing Job (raw/cointutor/ → rag_docs_cointutor) |
+| `cointutor/rag-ingestion-cronjob-cointutor.yaml` | CoinTutor CronJob (daily 02:00) |
+| `drillquiz/rag-backend-drillquiz.yaml` | DrillQuiz backend (rag_docs_drillquiz) |
+| `drillquiz/rag-ingestion-job-drillquiz.yaml` | DrillQuiz indexing Job (raw/drillquiz/ → rag_docs_drillquiz) |
+| `drillquiz/rag-ingestion-cronjob-drillquiz.yaml` | DrillQuiz CronJob (daily 02:30) |
 | `namespace.yaml` | namespace `rag` |
-| `qdrant-values.yaml` | Qdrant Helm values (단일 노드, PVC) |
-| `qdrant-collection-init.yaml` | Job: 컬렉션 rag_docs_cointutor, rag_docs_drillquiz 생성 |
-| `rag-frontend.yaml` | Frontend (nginx + 정적 UI, 주제 콤보박스) |
-| `rag-ingress.yaml` | Ingress (rag.*, rag-ui.*) — install.sh에서 k8s_project/k8s_domain 치환 |
-| `rag-ingestion-cronjob.yaml` | (레거시) CronJob raw/ → rag_docs |
-| `rag-ingestion-job.yaml` | (레거시) Job 1회 실행 |
-| `rag-ingestion-secret.example.yaml` | Secret 예시 (cointutor/drillquiz 각각 MinIO + OpenAI/Gemini 키) |
-| `reset-rag-collections.sh` | Qdrant 컬렉션 초기화 (cointutor \| drillquiz \| all) [reindex] |
-| `scripts/ingest.py` | 인덱서 스크립트 (install.sh에서 ConfigMap으로 올림) |
+| `qdrant-values.yaml` | Qdrant Helm values (single node, PVC) |
+| `qdrant-collection-init.yaml` | Job: create collections rag_docs_cointutor, rag_docs_drillquiz |
+| `rag-frontend.yaml` | Frontend (nginx + static UI, topic combo) |
+| `rag-ingress.yaml` | Ingress (rag.*, rag-ui.*) — install.sh substitutes k8s_project/k8s_domain |
+| `rag-ingestion-cronjob.yaml` | (Legacy) CronJob raw/ → rag_docs |
+| `rag-ingestion-job.yaml` | (Legacy) one-off Job |
+| `rag-ingestion-secret.example.yaml` | Secret example (MinIO + OpenAI/Gemini key per cointutor/drillquiz) |
+| `reset-rag-collections.sh` | Reset Qdrant collections (cointutor \| drillquiz \| all) [reindex] |
+| `scripts/ingest.py` | Indexer script (install.sh uploads as ConfigMap) |
 
-## 인덱서: MinIO raw/ → 청킹 → 임베딩 → Qdrant rag_docs
+## Indexer: MinIO raw/ → chunking → embedding → Qdrant rag_docs
 
-**흐름**: MinIO 버킷 `rag-docs`의 `raw/` 아래 PDF·txt → 텍스트 추출 → 청킹(500자, 50자 overlap) → **임베딩(OpenAI 또는 Gemini)** → Qdrant 컬렉션 `rag_docs`에 upsert.
+**Flow**: PDF/txt under MinIO bucket `rag-docs` `raw/` → text extraction → chunking (500 chars, 50 overlap) → **embedding (OpenAI or Gemini)** → upsert into Qdrant collection `rag_docs`.
 
-### 1. Secret 생성 (필수, 주제별)
+### 1. Create Secrets (required, per topic)
 
-인덱서 Job/CronJob과 백엔드는 주제별 Secret을 사용합니다. CoinTutor → `rag-ingestion-secret-cointutor`, DrillQuiz → `rag-ingestion-secret-drillquiz`. **OpenAI** 또는 **Gemini** 중 하나만 있으면 됩니다. (보통 두 Secret을 같은 값으로 생성.)
+Indexer Job/CronJob and backends use per-topic Secrets. CoinTutor → `rag-ingestion-secret-cointutor`, DrillQuiz → `rag-ingestion-secret-drillquiz`. You only need **OpenAI** or **Gemini** (usually create both Secrets with the same values).
 
-**Gemini 사용 시 (권장):**
+**Using Gemini (recommended):**
 ```bash
 MINIO_USER=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)
 MINIO_PASS=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)
@@ -94,11 +94,11 @@ kubectl create secret generic rag-ingestion-secret-drillquiz -n rag \
   --from-literal=GEMINI_API_KEY='...'
 ```
 
-**OpenAI 사용 시:** 위와 동일하게 두 Secret을 만들고 `OPENAI_API_KEY`를 넣으면 됩니다.
+**Using OpenAI:** Create both Secrets the same way and set `OPENAI_API_KEY`.
 
-#### MinIO 시크릿 복사 (devops → rag)
+#### Copy MinIO secret (devops → rag)
 
-이미 Secret이 있고 OpenAI/Gemini 키만 있을 때, MinIO 접근용 키는 **devops 네임스페이스의 MinIO 시크릿**에서 복사해 넣으면 된다.
+When you already have a Secret and only need to add OpenAI/Gemini keys, copy MinIO keys from the **MinIO secret in the devops namespace**.
 
 ```bash
 MINIO_USER=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)
@@ -107,25 +107,25 @@ kubectl patch secret rag-ingestion-secret-cointutor -n rag -p '{"data":{"MINIO_A
 kubectl patch secret rag-ingestion-secret-drillquiz -n rag -p '{"data":{"MINIO_ACCESS_KEY":"'$(echo -n "$MINIO_USER" | base64 | tr -d '\n')'","MINIO_SECRET_KEY":"'$(echo -n "$MINIO_PASS" | base64 | tr -d '\n')'"}}'
 ```
 
-### 2. MinIO 버킷 및 raw/ 업로드
+### 2. MinIO bucket and raw/ upload
 
-인덱서 실행 시 **버킷 `rag-docs`**가 없으면 **자동으로 생성**한다. 수동으로 만들 필요 없다.
+If bucket `rag-docs` does not exist when the indexer runs, it is **created automatically**. No need to create it manually.
 
-- **콘솔에서 미리 만들고 싶을 때**: MinIO 웹 콘솔 → Buckets → Create Bucket → 이름 `rag-docs`.
-- **문서 업로드**: 버킷 안에 `raw/cointutor/`(또는 `raw/drillquiz/`) prefix를 두고 그 아래에 **PDF, .txt, .md** 업로드. CoinTutor 소스 문서는 `tz-local/resource/rag/cointutor/`(USE_CASES.md, USER_GUIDE.md) 에 있으며, MinIO `rag-docs/raw/cointutor/` 에 올리면 CoinTutor 인덱싱 대상이 됨.
+- **To create in console**: MinIO web console → Buckets → Create Bucket → name `rag-docs`.
+- **Upload documents**: Use prefix `raw/cointutor/` (or `raw/drillquiz/`) and upload **PDF, .txt, .md** under it. CoinTutor source docs are in `tz-local/resource/rag/cointutor/` (USE_CASES.md, USER_GUIDE.md); upload to MinIO `rag-docs/raw/cointutor/` to include them in CoinTutor indexing.
 
-#### 인덱서 로그 해석
+#### Indexer log messages
 
-| 로그 메시지 | 의미 | 조치 |
-|-------------|------|------|
-| `No objects under rag-docs/raw/. Upload PDF/txt to raw/ then re-run.` | 버킷·raw/는 있으나 **파일이 없음** | MinIO 콘솔에서 `rag-docs` → `raw/` 폴더에 PDF 또는 .txt 업로드 후 Job/CronJob 다시 실행 |
-| `Embedding: OpenAI text-embedding-3-small` / `Embedding: Gemini ...` | 사용 중인 임베딩 프로바이더·모델 | 확인용, 조치 불필요 |
-| `Created bucket rag-docs.` | 버킷이 없어서 **자동 생성됨** | 다음 실행부터 raw/에 파일만 올리면 됨 |
-| `WARNING: Running pip as the 'root' user'` / `[notice] pip ...` | 컨테이너 안에서 pip 설치 시 나오는 경고 | 무시해도 됨 |
-| `  <파일경로>: N chunks` / `Upserted ... points` | 해당 파일 청킹·Qdrant 적재 완료 | 정상 동작 |
-| `Done. rag_docs points_count=<N>` | 인덱싱 완료, Qdrant에 N개 포인트 | 정상 |
+| Log message | Meaning | Action |
+|-------------|---------|--------|
+| `No objects under rag-docs/raw/. Upload PDF/txt to raw/ then re-run.` | Bucket/raw/ exists but **no files** | Upload PDF or .txt to `rag-docs` → `raw/` in MinIO console, then re-run Job/CronJob |
+| `Embedding: OpenAI text-embedding-3-small` / `Embedding: Gemini ...` | Embedding provider/model in use | Informational, no action |
+| `Created bucket rag-docs.` | Bucket was missing and **created automatically** | From next run, just add files under raw/ |
+| `WARNING: Running pip as the 'root' user'` / `[notice] pip ...` | Warning from pip install inside container | Can be ignored |
+| `  <filepath>: N chunks` / `Upserted ... points` | Chunking and Qdrant upsert done for that file | Normal |
+| `Done. rag_docs points_count=<N>` | Indexing complete, N points in Qdrant | Normal |
 
-### 3. 인덱싱 1회 실행 (Job)
+### 3. One-off indexing (Job)
 
 ```bash
 # CoinTutor
@@ -137,36 +137,36 @@ kubectl logs -n rag job/rag-ingestion-job-cointutor -f
 kubectl apply -f drillquiz/rag-ingestion-job-drillquiz.yaml -n rag
 ```
 
-### 4. 주기 실행 (CronJob)
+### 4. Scheduled run (CronJob)
 
-CronJob `rag-ingestion`은 매일 02:00에 같은 인덱서 스크립트를 실행합니다. Secret이 있으면 그대로 동작합니다.
+CronJob `rag-ingestion` runs the same indexer script daily at 02:00. It works as-is if Secrets exist.
 
 ### 5. Payload (Qdrant)
 
-청크별 payload: `doc_id`, `source`, `path`, `chunk_index`, `text`, `created_at` — RAG 출처·필터에 사용.
+Per-chunk payload: `doc_id`, `source`, `path`, `chunk_index`, `text`, `created_at` — used for RAG source and filtering.
 
-### 6. ingest.py가 K8s 안에서 기동하는 방식
+### 6. How ingest.py runs inside K8s
 
-| 단계 | 내용 |
-|------|------|
-| 1. ConfigMap | `install.sh`가 `scripts/ingest.py`를 읽어 ConfigMap `rag-ingestion-script`로 생성. 키는 파일명 `ingest.py`. |
-| 2. Pod 볼륨 | CronJob/Job의 `volumes[]`에 `configMap: name: rag-ingestion-script` 지정, 컨테이너에서 `volumeMounts: mountPath: /config` 로 마운트. |
-| 3. 컨테이너 안 경로 | Pod 안에서는 스크립트가 **`/config/ingest.py`** 로 보임. |
-| 4. 실행 | 컨테이너 `command`: `pip install ... && python /config/ingest.py`. 즉 Python 이미지로 기동한 뒤 마운트된 스크립트를 실행. |
-| 5. 환경 | `envFrom: secretRef: rag-ingestion-secret-cointutor` 또는 `-drillquiz` 로 MinIO/OpenAI/Gemini 키 주입, 나머지(QDRANT_HOST, MINIO_ENDPOINT 등)는 CronJob/Job의 `env[]`로 주입. |
+| Step | Description |
+|------|-------------|
+| 1. ConfigMap | `install.sh` reads `scripts/ingest.py` and creates ConfigMap `rag-ingestion-script`. Key is filename `ingest.py`. |
+| 2. Pod volume | CronJob/Job `volumes[]` uses `configMap: name: rag-ingestion-script`; container mounts with `volumeMounts: mountPath: /config`. |
+| 3. Path in container | Script appears as **`/config/ingest.py`** inside the Pod. |
+| 4. Run | Container `command`: `pip install ... && python /config/ingest.py`. I.e. start from Python image then run the mounted script. |
+| 5. Env | `envFrom: secretRef: rag-ingestion-secret-cointutor` or `-drillquiz` injects MinIO/OpenAI/Gemini keys; QDRANT_HOST, MINIO_ENDPOINT etc. come from CronJob/Job `env[]`. |
 
-- **CronJob**: 매일 02:00에 스케줄러가 Job을 하나 생성 → Pod 기동 → 위 순서로 `ingest.py` 실행.
-- **1회만 실행**: `kubectl apply -f cointutor/rag-ingestion-job-cointutor.yaml -n rag` (또는 drillquiz) 또는 `./reset-rag-collections.sh cointutor reindex`.
+- **CronJob**: At 02:00 daily the scheduler creates a Job → Pod starts → runs `ingest.py` as above.
+- **One-off run**: `kubectl apply -f cointutor/rag-ingestion-job-cointutor.yaml -n rag` (or drillquiz) or `./reset-rag-collections.sh cointutor reindex`.
 
-## 삭제 후 재설치
+## Uninstall then reinstall
 
 ```bash
 kubectl delete namespace rag
 bash install.sh
 ```
 
-## 설정
+## Configuration
 
-- `k8s_project`, `k8s_domain`: `/root/.k8s/project` 또는 환경변수. 없으면 `rag`, `local`.
-- Qdrant 단일 노드: `qdrant-values.yaml`에서 `config.cluster.enabled: false`.
-- 특정 노드에만 스케줄: `qdrant-values.yaml`에 `nodeSelector` 또는 `affinity` 추가.
+- `k8s_project`, `k8s_domain`: From `/root/.k8s/project` or env. Defaults: `rag`, `local`.
+- Qdrant single node: In `qdrant-values.yaml` set `config.cluster.enabled: false`.
+- Schedule on specific nodes: Add `nodeSelector` or `affinity` in `qdrant-values.yaml`.

@@ -46,7 +46,7 @@ async def chat_page(
     lang: str = "",
     db: AsyncSession = Depends(get_db),
 ):
-    """채팅 페이지. embed=1 위젯용. lang= en|es|ko|zh|ja 넘기면 해당 언어, 없으면 브라우저 언어 폴백."""
+    """Chat page. embed=1 for widget. lang= en|es|ko|zh|ja for UI language; otherwise browser locale fallback."""
     if not token:
         logger.warning("GET /chat: missing token")
         return HTMLResponse(
@@ -70,7 +70,7 @@ async def chat_api_page(
     lang: str = "",
     db: AsyncSession = Depends(get_db),
 ):
-    """채팅 페이지 (동일). embed=1 위젯용. lang= en|es|ko|zh|ja."""
+    """Chat page (same as /chat). embed=1 for widget. lang= en|es|ko|zh|ja."""
     if not token:
         return HTMLResponse(
             content="<html><body><p>Missing <code>token</code> query parameter (JWT).</p></body></html>",

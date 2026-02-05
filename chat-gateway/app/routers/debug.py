@@ -1,4 +1,4 @@
-"""Dify 연동 디버그용. 배포 환경에서는 비활성화 권장."""
+"""Debug helpers for Dify integration. Disable in production."""
 import httpx
 from fastapi import APIRouter
 from app.config import get_settings
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/debug", tags=["debug"])
 
 @router.get("/dify-test")
 async def dify_test():
-    """Dify API를 직접 호출해 요청 URL·상태·응답 본문을 그대로 반환."""
+    """Call Dify API directly and return request URL, status, and response body as-is."""
     s = get_settings()
     base = s.dify_base_url.rstrip("/")
     url = f"{base}/v1/conversations"

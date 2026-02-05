@@ -1,4 +1,4 @@
-# CronJob: CoinTutor 전용 인덱싱 (매일 02:00, raw/cointutor/ -> rag_docs_cointutor)
+# CronJob: CoinTutor-only indexing (daily 02:00, raw/cointutor/ -> rag_docs_cointutor)
 apiVersion: batch/v1
 kind: CronJob
 metadata:

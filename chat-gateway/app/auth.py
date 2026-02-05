@@ -47,7 +47,7 @@ def decode_jwt(token: str) -> ChatIdentity:
     except jwt.InvalidSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token signature. 서버의 CHAT_GATEWAY_JWT_SECRET과 토큰 발급 시 사용한 값이 같은지 확인하세요. 서버 재시작 후 새 토큰을 발급해 보세요.",
+            detail="Invalid token signature. Ensure server CHAT_GATEWAY_JWT_SECRET matches the value used when issuing the token. Try issuing a new token after restarting the server.",
         )
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
@@ -63,7 +63,7 @@ async def get_identity_optional(
     api_key: str = Security(API_KEY_HEADER),
     bearer: HTTPAuthorizationCredentials | None = Security(BEARER),
 ) -> ChatIdentity | None:
-    """JWT면 identity 반환, API Key면 None (body에서 system_id/user_id 사용)."""
+    """If JWT: return identity. If API Key: None (use system_id/user_id from body)."""
     if bearer:
         return decode_jwt(bearer.credentials)
     if api_key:

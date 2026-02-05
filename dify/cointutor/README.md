@@ -1,32 +1,32 @@
-# CoinTutor 앱 / 커스텀 도구
+# CoinTutor app / custom tool
 
-## ID가 매번 달라지는 이유
+## Why IDs change every time
 
-- **노드·엣지 ID** (`1711528708197`, `1711528802931-1711528833796` 등): Dify가 내보낼 때마다 새로 부여합니다.
-- **provider_id** (`a1744db9-36ab-44a2-abe2-20bcef718142`): 커스텀 도구를 **UI에서 만들 때마다** Dify가 새 UUID를 부여합니다. 스크립트/API로 도구를 자동 생성하지 않으면 환경마다 값이 다릅니다.
+- **Node and edge IDs** (e.g. `1711528708197`, `1711528802931-1711528833796`): Dify assigns new ones on each export.
+- **provider_id** (e.g. `a1744db9-36ab-44a2-abe2-20bcef718142`): Dify assigns a new UUID **each time** you create the custom tool in the UI. Without creating the tool via script/API, the value differs per environment.
 
-이 리포지터리의 `CoinTutor.yml`은 **한 번 내보낸 스냅샷**이므로, 다른 Dify나 재설치 환경에서는 위 ID들이 맞지 않을 수 있습니다.
+The `CoinTutor.yml` in this repo is a **one-time export snapshot**, so in another Dify or after reinstall these IDs may not match.
 
-## 새 환경에서 쓰는 방법 (권장)
+## How to use in a new environment (recommended)
 
-1. **커스텀 도구 먼저 만들기**  
-   - Dify **도구 → 커스텀 → 커스텀 도구 만들기**  
-   - 이름: `CoinTutor RAG`  
-   - 스키마: `cointutor-rag-openapi.yaml` 내용 전체 붙여넣기 → 저장  
+1. **Create the custom tool first**  
+   - In Dify: **Tools → Custom → Create custom tool**  
+   - Name: `CoinTutor RAG`  
+   - Schema: paste the full contents of `cointutor-rag-openapi.yaml` → Save  
 
-2. **앱 임포트**  
-   - **앱** → **앱 만들기** → **고급 채팅** 등으로 새 앱 생성 후, **설정** 등에서 **임포트**로 `CoinTutor.yml` 업로드  
-   - 또는 기존 앱에서 워크플로를 이 구조로 수동 구성  
+2. **Import the app**  
+   - **Apps** → **Create app** → e.g. **Advanced chat**, then in **Settings** use **Import** to upload `CoinTutor.yml`  
+   - Or manually build the workflow in an existing app to match this structure  
 
-3. **도구만 다시 연결**  
-   - 임포트 후 **Tool** 노드가 “도구를 찾을 수 없음”이면, 해당 노드를 열어 **도구 선택**에서 방금 만든 **CoinTutor RAG**를 다시 선택하고 저장  
-   - 그러면 현재 환경의 `provider_id`로 자동 연결됩니다. **YAML의 ID를 수동으로 바꿀 필요 없음.**
+3. **Reconnect the tool only**  
+   - After import, if a **Tool** node shows “tool not found”, open that node, in **Tool selection** choose the **CoinTutor RAG** you just created, and save  
+   - It will then link to the current environment’s `provider_id`. **No need to edit IDs in the YAML.**
 
-정리하면, **CoinTutor.yml은 그대로 두고**, 새 환경에서는 **커스텀 도구 생성 → 앱 임포트 → Tool 노드에서 CoinTutor RAG만 다시 선택**하면 됩니다.
+In short: **keep CoinTutor.yml as-is**; in a new environment do **create custom tool → import app → re-select CoinTutor RAG in the Tool node**.
 
-## 파일
+## Files
 
-| 파일 | 용도 |
-|------|------|
-| `cointutor-rag-openapi.yaml` | 커스텀 도구 등록 시 스키마로 붙여넣기 |
-| `CoinTutor.yml` | 앱 내보내기 파일. 참조/임포트용(위 절차 후 Tool 노드에서 도구만 재선택) |
+| File | Purpose |
+|------|---------|
+| `cointutor-rag-openapi.yaml` | Paste as schema when registering the custom tool |
+| `CoinTutor.yml` | Exported app file. For reference/import (after the steps above, re-select the tool in the Tool node) |

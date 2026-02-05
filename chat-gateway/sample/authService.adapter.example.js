@@ -1,11 +1,11 @@
 /**
- * ChatWidget가 기대하는 authService 인터페이스 (최소 구현)
- * 프로젝트에 authService가 없으면 이 파일을 src/services/authService.js 로 복사 후
- * getUserSync() 반환값만 실제 로그인 사용자에 맞게 수정.
+ * Minimal authService interface expected by ChatWidget.
+ * If your project has no authService, copy this file to src/services/authService.js
+ * and adjust getUserSync() return value for your logged-in user.
  *
- * 필수:
- * - getUserSync() => { username?: string } | null  (로그인 시 username, 없으면 null)
- * - subscribe(handler) => unsubscribe 함수
+ * Required:
+ * - getUserSync() => { username?: string } | null  (username when logged in, null otherwise)
+ * - subscribe(handler) => unsubscribe function
  */
 let currentUser = null
 const subscribers = new Set()
@@ -29,7 +29,7 @@ export default {
   }
 }
 
-// 로그인/로그아웃 시 호출해서 상태 갱신 (실제 앱에서는 로그인 성공/실패 시 호출)
+// Call on login/logout to refresh state (in your app, call on login success/failure)
 export function setAuthUser(user) {
   currentUser = user ? { username: user.username || user.email || 'user', ...user } : null
   subscribers.forEach((fn) => {

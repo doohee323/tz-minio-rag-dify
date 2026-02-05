@@ -1,4 +1,4 @@
-# RAG Backend + Frontend Ingress (Jenkins ingress 스타일)
+# RAG Backend + Frontend Ingress (Jenkins-style)
 # Backend: rag.default.k8s_project.k8s_domain, rag.k8s_domain
 # Frontend: rag-ui.default.k8s_project.k8s_domain, rag-ui.k8s_domain
 apiVersion: networking.k8s.io/v1
@@ -11,7 +11,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-ssl-verify: 'false'
     nginx.ingress.kubernetes.io/ssl-redirect: 'false'
     cert-manager.io/cluster-issuer: "selfsigned-issuer"
-    # 트래픽 통제 (§3): IP당 RPS·동시 접속 제한 (초과 시 503)
+    # Traffic control (§3): per-IP RPS and connection limit (503 when exceeded)
     nginx.ingress.kubernetes.io/limit-rps: "30"
     nginx.ingress.kubernetes.io/limit-connections: "20"
 spec:

@@ -1,6 +1,6 @@
-# Dify Helm values (RAG 연동: Qdrant(rag NS), MinIO(devops NS), Ingress)
-# install.sh에서 k8s_project, k8s_domain 치환 후 사용
-# PVC: NFS 스토리지클래스(nfs-client) 사용 — api/worker 공유용 ReadWriteMany 필요
+# Dify Helm values (RAG: Qdrant rag NS, MinIO devops NS, Ingress)
+# install.sh substitutes k8s_project, k8s_domain before use
+# PVC: NFS StorageClass (nfs-client) for api/worker shared ReadWriteMany
 
 image:
   api:
@@ -20,7 +20,7 @@ image:
     tag: latest
     pullPolicy: IfNotPresent
 
-# 벡터 DB: 기존 RAG의 Qdrant 사용 (rag 네임스페이스)
+# Vector DB: use existing RAG Qdrant (rag namespace)
 api:
   extraEnv:
     - name: CHECK_UPDATE_URL
@@ -31,7 +31,7 @@ api:
       value: "http://qdrant.rag.svc.cluster.local:6333"
     - name: QDRANT_API_KEY
       value: ""
-    # MinIO(S3) — OpenDAL은 OPENDAL_S3_* 만 읽음. Secret: S3_ACCESS_KEY, S3_SECRET_KEY
+    # MinIO(S3) — OpenDAL reads only OPENDAL_S3_*. Secret: S3_ACCESS_KEY, S3_SECRET_KEY
     - name: STORAGE_TYPE
       value: "opendal"
     - name: OPENDAL_SCHEME
@@ -52,9 +52,9 @@ api:
         secretKeyRef:
           name: dify-minio-secret
           key: S3_SECRET_KEY
-  # 접속 기준 URL. 비어 있으면 리다이렉트/CORS 오류로 포트포워딩·Ingress 모두 안 열림.
-  # install.sh에서 DIFY_BASE_URL_REPLACE → 실제 URL로 치환 (기본: https://dify.k8s_domain)
-  # 포트포워딩만 쓸 때: DIFY_BASE_URL=http://localhost:8080 bash install.sh
+  # Base URL for access. If empty, redirect/CORS errors and port-forward/Ingress won't work.
+  # install.sh replaces DIFY_BASE_URL_REPLACE with actual URL (default: https://dify.k8s_domain)
+  # For port-forward only: DIFY_BASE_URL=http://localhost:8080 bash install.sh
   url:
     consoleApi: "DIFY_BASE_URL_REPLACE"
     consoleWeb: "DIFY_BASE_URL_REPLACE"
@@ -64,7 +64,7 @@ api:
     files: "DIFY_BASE_URL_REPLACE"
   secretKey: "sk-dify-change-me-in-production-42chars-minimum"
   migration: true
-  # NFS PVC (RWX) — api/worker 공유. 사전에 NFS provisioner 설치 필요 (dynamic-provisioning/nfs)
+  # NFS PVC (RWX) for api/worker shared. NFS provisioner must be installed first (dynamic-provisioning/nfs)
   persistence:
     persistentVolumeClaim:
       storageClass: "nfs-client"
@@ -100,7 +100,7 @@ worker:
           name: dify-minio-secret
           key: S3_SECRET_KEY
 
-# 내장 PostgreSQL, Redis 사용 (chart 기본값)
+# Use built-in PostgreSQL, Redis (chart defaults)
 postgresql:
   enabled: true
   auth:
@@ -118,11 +118,11 @@ redis:
   auth:
     password: "difyai123456"
 
-# Weaviate 비활성화 (Qdrant 사용)
+# Disable Weaviate (using Qdrant)
 weaviate:
   enabled: false
 
-# pluginDaemon도 NFS 공유 스토리지 사용 (RWX)
+# pluginDaemon also uses NFS shared storage (RWX)
 pluginDaemon:
   persistence:
     persistentVolumeClaim:
@@ -130,7 +130,7 @@ pluginDaemon:
       accessModes: ReadWriteMany
       size: 5Gi
 
-# Ingress: dify-ingress.yaml로 별도 적용 (install.sh에서 k8s_project/k8s_domain 치환)
+# Ingress: apply separately via dify-ingress.yaml (install.sh substitutes k8s_project/k8s_domain)
 ingress:
   enabled: false
 

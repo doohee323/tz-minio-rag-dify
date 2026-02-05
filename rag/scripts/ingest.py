@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-RAG 인덱서: MinIO raw/ -> 청킹 -> 임베딩(OpenAI 또는 Gemini) -> Qdrant rag_docs
+RAG indexer: MinIO raw/ -> chunking -> embedding (OpenAI or Gemini) -> Qdrant rag_docs
 env: EMBEDDING_PROVIDER=openai|gemini,
      OpenAI: OPENAI_API_KEY, EMBEDDING_MODEL
-     Gemini: GEMINI_API_KEY(또는 GOOGLE_API_KEY), EMBEDDING_MODEL=gemini-embedding-001
-     공통: MINIO_*, QDRANT_*, CHUNK_SIZE, CHUNK_OVERLAP
+     Gemini: GEMINI_API_KEY (or GOOGLE_API_KEY), EMBEDDING_MODEL=gemini-embedding-001
+     Common: MINIO_*, QDRANT_*, CHUNK_SIZE, CHUNK_OVERLAP
 """
 import os
 import sys
@@ -12,8 +12,8 @@ import uuid
 import hashlib
 from io import BytesIO
 
-# 의존성: pip install minio qdrant-client openai pypdf
-# Gemini 사용 시 추가: pip install google-genai
+# Dependencies: pip install minio qdrant-client openai pypdf
+# For Gemini add: pip install google-genai
 from minio import Minio
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
@@ -138,7 +138,7 @@ def main():
         minio_client.make_bucket(bucket)
         print(f"Created bucket {bucket}.")
 
-    # 컬렉션을 비우고 다시 생성: MinIO에서 삭제한 파일에 해당하는 벡터도 제거됨 (전체 동기화)
+    # Drop and recreate collection: vectors for files deleted from MinIO are removed (full sync)
     try:
         qdrant_client.delete_collection(collection_name=collection)
         print(f"Deleted collection {collection}.")

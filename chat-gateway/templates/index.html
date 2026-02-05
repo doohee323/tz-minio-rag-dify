@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Gateway — RAG & Dify</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #7dd3fc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+    .links a {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.6rem 1rem;
+      background: var(--surface);
+      color: var(--accent);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .links a:hover {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Chat Gateway</h1>
+    <p class="tagline">Unified chat API in front of Dify. Part of the tz-minio-rag-dify stack.</p>
+
+    <div class="card">
+      <h2>What this is</h2>
+      <p>
+        This service is the <strong>Chat Gateway</strong>: a single API and chat UI for multiple apps (e.g. DrillQuiz, CoinTutor).
+        It sits in front of <a href="https://dify.ai" target="_blank" rel="noopener" style="color: var(--accent);">Dify</a>,
+        manages users and conversations, and can sync chat history to its own database for support and analytics.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Project: tz-minio-rag-dify</h2>
+      <p>
+        The full stack runs on Kubernetes: <strong>MinIO</strong> (object store), <strong>Qdrant</strong> (vector DB),
+        <strong>RAG backends</strong> (CoinTutor / DrillQuiz), <strong>Dify</strong> (chatbots), and this <strong>Chat Gateway</strong>.
+        RAG ingestion runs on a schedule; Dify apps call the RAG backends as tools.
+      </p>
+    </div>
+
+    <div class="links">
+      <a href="https://github.com/doohee323/tz-minio-rag-dify" target="_blank" rel="noopener">GitHub source</a>
+      <a href="/docs">API docs (OpenAPI)</a>
+      <a href="/chat">Chat page</a>
+      <a href="/cache">Cache / history (API key required)</a>
+    </div>
+
+    <p class="footer">
+      Chat page requires a valid JWT (<code>?token=...</code>). Use the chat from DrillQuiz or CoinTutor, or obtain a token via <code>GET /v1/chat-token</code> with <code>X-API-Key</code>.
+    </p>
+  </div>
+</body>
+</html>

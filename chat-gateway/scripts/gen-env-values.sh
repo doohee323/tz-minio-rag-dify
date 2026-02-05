@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# .env에 넣을 CHAT_GATEWAY_JWT_SECRET, CHAT_GATEWAY_API_KEY 예시 값을 생성해서 출력합니다.
-# 사용: ./scripts/gen-env-values.sh  → 출력을 보고 .env에 복사
+# Generate sample CHAT_GATEWAY_JWT_SECRET and CHAT_GATEWAY_API_KEY for .env
+# Usage: ./scripts/gen-env-values.sh  → copy output into .env
 
-echo "# 아래 값을 .env에 넣으세요."
+echo "# Add the following to .env:"
 echo ""
 echo "CHAT_GATEWAY_JWT_SECRET=$(openssl rand -hex 32)"
 echo "CHAT_GATEWAY_API_KEY=key_drillquiz_$(openssl rand -hex 8),key_cointutor_$(openssl rand -hex 8)"
 echo ""
-echo "# DIFY_API_KEY는 Dify 웹(API 액세스)에서 복사해야 합니다:"
-echo "#   https://dify.drillquiz.com → 앱 선택 → API Access → API Key"
+echo "# DIFY_API_KEY must be copied from Dify web (API Access):"
+echo "#   https://dify.drillquiz.com → select app → API Access → API Key"

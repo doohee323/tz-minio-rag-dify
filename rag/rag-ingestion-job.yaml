@@ -1,6 +1,6 @@
-# Job: MinIO raw/ -> 청킹 -> 임베딩 -> Qdrant rag_docs (1회 실행)
-# Secret rag-ingestion-secret 필요: MINIO_ACCESS_KEY, MINIO_SECRET_KEY, OPENAI_API_KEY
-# ConfigMap rag-ingestion-script는 install.sh에서 scripts/ingest.py 로 생성
+# Job: MinIO raw/ -> chunking -> embedding -> Qdrant rag_docs (one-off run)
+# Requires Secret rag-ingestion-secret: MINIO_ACCESS_KEY, MINIO_SECRET_KEY, OPENAI_API_KEY
+# ConfigMap rag-ingestion-script is created by install.sh from scripts/ingest.py
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -39,8 +39,8 @@ spec:
           value: "6333"
         - name: QDRANT_COLLECTION
           value: "rag_docs"
-        # OpenAI: value "openai", Secret에 OPENAI_API_KEY
-        # Gemini:  value "gemini", Secret에 GEMINI_API_KEY
+        # OpenAI: value "openai", Secret has OPENAI_API_KEY
+        # Gemini:  value "gemini", Secret has GEMINI_API_KEY
         - name: EMBEDDING_PROVIDER
           value: "gemini"
         - name: EMBEDDING_MODEL

@@ -1,5 +1,5 @@
-# Job: DrillQuiz 전용 인덱싱 (MinIO raw/drillquiz/ -> Qdrant rag_docs_drillquiz)
-# Secret rag-ingestion-secret-drillquiz, ConfigMap rag-ingestion-script 필요
+# Job: DrillQuiz-only indexing (MinIO raw/drillquiz/ -> Qdrant rag_docs_drillquiz)
+# Requires Secret rag-ingestion-secret-drillquiz, ConfigMap rag-ingestion-script
 apiVersion: batch/v1
 kind: Job
 metadata:
