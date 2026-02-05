@@ -31,8 +31,20 @@ data:
       var out = document.getElementById('out');
       out.textContent = '요청 중...';
       fetch('/query', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({question: q, top_k: 5, collection: coll}) })
-        .then(r=>r.json()).then(d=> { out.textContent = JSON.stringify(d, null, 2); })
-        .catch(e=> { out.textContent = 'Error: ' + e.message; });
+        .then(function(r) {
+          var ct = (r.headers.get('Content-Type') || '');
+          if (!r.ok) {
+            return r.text().then(function(t) {
+              throw new Error('Backend ' + r.status + ': ' + (ct.indexOf('json') >= 0 ? (JSON.parse(t).detail || t) : t.slice(0, 200)));
+            });
+          }
+          if (ct.indexOf('application/json') >= 0) return r.json();
+          return r.text().then(function(t) { throw new Error('응답이 JSON이 아님 (백엔드 점검 필요): ' + t.slice(0, 150)); });
+        })
+        .then(function(d) { out.textContent = JSON.stringify(d, null, 2); })
+        .catch(function(e) {
+          out.textContent = 'Error: ' + e.message + '\n\n※ RAG Backend Pod 확인: kubectl get pods -n rag\n   Secret 없으면: rag-ingestion-secret (MINIO_*, GEMINI_API_KEY)';
+        });
     }
     </script>
     </body>

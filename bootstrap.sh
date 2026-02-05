@@ -87,6 +87,22 @@ summary() {
   echo "=============================================="
 }
 
+# --- Uninstall: Dify + RAG만 제거 (MinIO / Ingress는 미지원) ---
+uninstall_dify_rag() {
+  echo ""
+  echo "[1/1] Dify + RAG 스택 삭제 (rag/uninstall.sh)"
+  (cd "${REPO_ROOT}/rag" && bash uninstall.sh)
+}
+
+uninstall_summary() {
+  echo ""
+  echo "=============================================="
+  echo " Uninstall 완료 (Dify + RAG만 제거)"
+  echo "=============================================="
+  echo "  재설치: ./bootstrap.sh"
+  echo "=============================================="
+}
+
 # 실행
 main() {
   phase0
@@ -97,4 +113,10 @@ main() {
   summary
 }
 
-main "$@"
+if [[ "${1:-}" == "uninstall" ]]; then
+  phase0
+  uninstall_dify_rag
+  uninstall_summary
+else
+  main "$@"
+fi

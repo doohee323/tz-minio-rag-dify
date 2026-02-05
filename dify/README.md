@@ -64,11 +64,13 @@ Dify Helm 설치만으로는 앱에서 **LLM**과 **파일 저장소**를 쓸 �
 
 1. **도구(Tools)** → **커스텀(Custom)** → **커스텀 도구 만들기**
 2. **이름**: `CoinTutor RAG` (또는 `DrillQuiz RAG`)
-3. **스키마**: `cointutor-rag-openapi.yaml`(또는 `drillquiz-rag-openapi.yaml`) 파일 내용을 **전부 복사**해 스키마 칸에 **붙여넣기**
+3. **스키마**: `cointutor/cointutor-rag-openapi.yaml`(또는 `drillquiz/drillquiz-rag-openapi.yaml`) 파일 내용을 **전부 복사**해 스키마 칸에 **붙여넣기**
 4. **인증 방법**: 없음
 5. **저장**
 
 이후 워크플로에서 **도구** 노드를 추가할 때 위에서 만든 도구를 선택해 RAG `/query` 를 호출하면 된다.
+
+**앱 YAML(CoinTutor.yml)과 ID**: 내보낸 YAML의 노드 ID·`provider_id`는 환경마다 달라집니다. 새 Dify에서는 커스텀 도구를 만든 뒤 `cointutor/CoinTutor.yml`을 임포트하고, **Tool 노드에서만 "CoinTutor RAG"를 다시 선택**하면 됩니다. 자세한 절차는 `cointutor/README.md` 참고.
 
 ## 설치 상태 모니터링
 
@@ -141,5 +143,6 @@ Dify Helm 설치만으로는 앱에서 **LLM**과 **파일 저장소**를 쓸 �
 | `status.sh` | 설치 상태 모니터링 (pods/svc/pvc/ingress). `watch` 인자 시 실시간 갱신 |
 | `values.yaml` | 이미지·API/worker env(Qdrant, S3/MinIO), NFS PVC, PostgreSQL/Redis, Weaviate 비활성화 |
 | `dify-ingress.yaml` | Jenkins 스타일 Ingress |
-| `cointutor-rag-openapi.yaml` | CoinTutor RAG OpenAPI 스키마 (UI 커스텀 도구 만들기 → 스키마에 붙여넣기) |
-| `drillquiz-rag-openapi.yaml` | DrillQuiz RAG OpenAPI 스키마 (위와 동일) |
+| `cointutor/cointutor-rag-openapi.yaml` | CoinTutor RAG OpenAPI 스키마 (UI 커스텀 도구 만들기 → 스키마에 붙여넣기) |
+| `cointutor/CoinTutor.yml` | CoinTutor 앱 템플릿 |
+| `drillquiz/drillquiz-rag-openapi.yaml` | DrillQuiz RAG OpenAPI 스키마 (위와 동일) |
