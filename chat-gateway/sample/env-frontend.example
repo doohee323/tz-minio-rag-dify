@@ -1,9 +1,9 @@
 # Frontend build env example (CI/local)
 # Put in project root .env or env-frontend; in CI replace placeholders.
 
-# Chat Gateway URL (no trailing slash)
+# TZ-Chat Gateway URL (no trailing slash)
 VUE_APP_CHAT_GATEWAY_URL=https://chat.drillquiz.com
-# Chat Gateway API Key (one of CHAT_GATEWAY_API_KEY issued by the gateway)
+# TZ-Chat Gateway API Key (one of CHAT_GATEWAY_API_KEY issued by the gateway)
 VUE_APP_CHAT_GATEWAY_API_KEY=CHAT_GATEWAY_API_KEY_PLACEHOLDER
 # System ID (e.g. drillquiz, cointutor). Must match gateway ALLOWED_SYSTEM_IDS
 VUE_APP_CHAT_GATEWAY_SYSTEM_ID=drillquiz

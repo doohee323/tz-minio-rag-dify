@@ -69,7 +69,7 @@ pipeline {
                         env.ARGOCD_PASSWORD = ''
                     }
 
-                    // Chat Gateway: JWT and Dify API keys
+                    // TZ-Chat Gateway: JWT and Dify API keys
                     try {
                         withCredentials([string(credentialsId: 'CHAT_GATEWAY_JWT_SECRET', variable: 'CHAT_GATEWAY_JWT_SECRET')]) {
                             env.CHAT_GATEWAY_JWT_SECRET = env.CHAT_GATEWAY_JWT_SECRET

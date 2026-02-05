@@ -25,7 +25,7 @@ source .venv/bin/activate
 echo "Checking dependencies..."
 pip install -q -r requirements.txt
 
-echo "Chat Gateway running locally (http://0.0.0.0:8088)"
+echo "TZ-Chat Gateway running locally (http://0.0.0.0:8088)"
 echo "  API docs: http://localhost:8088/docs"
 echo "  Chat page: http://localhost:8088/chat?token=<JWT>"
 # Disable buffering so logs appear immediately

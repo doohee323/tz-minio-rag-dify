@@ -34,11 +34,11 @@ class RequestLogMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    logger.info("Chat Gateway ready")
+    logger.info("TZ-Chat Gateway ready")
     yield
 
 
-app = FastAPI(title="Chat Gateway", description="Chat gateway in front of Dify", lifespan=lifespan)
+app = FastAPI(title="TZ-Chat Gateway", description="TZ-Chat Gateway in front of Dify", lifespan=lifespan)
 
 # CORS: required for frontends (e.g. DrillQuiz) calling /v1/chat-token. OPTIONS preflight + X-API-Key allowed.
 CORS_ORIGINS_DEFAULT = [

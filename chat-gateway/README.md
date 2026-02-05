@@ -1,4 +1,4 @@
-# Chat Gateway
+# TZ-Chat Gateway
 
 **Chat gateway** in front of Dify: client systems (DrillQuiz, CoinTutor, etc.) call this API only; users and conversations are managed centrally by the gateway.
 
@@ -153,7 +153,7 @@ Example JWT (HS256) when your system sends users to the chat page:
 ## Architecture
 
 ```
-[DrillQuiz / CoinTutor / ...] → [Chat Gateway] → Dify API
+[DrillQuiz / CoinTutor / ...] → [TZ-Chat Gateway] → Dify API
                                       ↓
                                SQLite (conversation mapping + conversation_cache, message_cache)
 ```

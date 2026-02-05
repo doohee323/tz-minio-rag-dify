@@ -907,7 +907,7 @@ deploy_to_kubernetes() {
         awk -v key="$GEMINI_API_KEY" '{gsub(/#GEMINI_API_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
     fi
 
-    # Chat Gateway secrets (base64 for k8s Secret data)
+    # TZ-Chat Gateway secrets (base64 for k8s Secret data)
     CHAT_GATEWAY_JWT_SECRET_B64=$(echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64)
     CHAT_GATEWAY_API_KEY_B64=$(echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64)
     DIFY_API_KEY_B64=$(echo -n "${DIFY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_API_KEY:-}" | base64)
@@ -975,7 +975,7 @@ deploy_to_kubernetes() {
         if [ -n "${GEMINI_API_KEY_B64}" ]; then
             awk -v key="$GEMINI_API_KEY_B64" '{gsub(/#GEMINI_API_KEY/, key)}1' ${TARGET_K8S_FILE} > ${TARGET_K8S_FILE}.tmp && mv ${TARGET_K8S_FILE}.tmp ${TARGET_K8S_FILE}
         fi
-        # Chat Gateway secrets for ArgoCD
+        # TZ-Chat Gateway secrets for ArgoCD
         CHAT_GATEWAY_JWT_SECRET_B64=$(echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64)
         CHAT_GATEWAY_API_KEY_B64=$(echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64)
         DIFY_API_KEY_B64=$(echo -n "${DIFY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_API_KEY:-}" | base64)

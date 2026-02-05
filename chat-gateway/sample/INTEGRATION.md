@@ -4,7 +4,7 @@ This document describes how to add the chat widget (as used in tz-drillquiz) to 
 
 ## Prerequisites
 
-- **Chat Gateway** server must be deployed, and you must have one of the `CHAT_GATEWAY_API_KEY` API keys.
+- **TZ-Chat Gateway** server must be deployed, and you must have one of the `CHAT_GATEWAY_API_KEY` API keys.
 - The Vue 2/3 project must have an **auth service** or be able to implement a minimal interface (authService adapter).
 
 ---
@@ -84,7 +84,7 @@ The following env vars are required at build time. Use `.env` locally and replac
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `VUE_APP_CHAT_GATEWAY_URL` | Chat Gateway base URL (no trailing `/`) | `https://chat.drillquiz.com` |
+| `VUE_APP_CHAT_GATEWAY_URL` | TZ-Chat Gateway base URL (no trailing `/`) | `https://chat.drillquiz.com` |
 | `VUE_APP_CHAT_GATEWAY_API_KEY` | Gateway API key (one of CHAT_GATEWAY_API_KEY) | (injected by Jenkins/CI) |
 | `VUE_APP_CHAT_GATEWAY_SYSTEM_ID` | System identifier (must match gateway ALLOWED_SYSTEM_IDS) | `drillquiz` |
 
@@ -106,7 +106,7 @@ Example file: `env-frontend.example`
 
 ## 6. CI build (e.g. Jenkins)
 
-- When Chat Gateway domain/API key differ per branch:
+- When TZ-Chat Gateway domain/API key differ per branch:
   - In `env-frontend` set `VUE_APP_CHAT_GATEWAY_URL=https://chat.drillquiz.com` (fixed),  
     `VUE_APP_CHAT_GATEWAY_API_KEY=CHAT_GATEWAY_API_KEY_PLACEHOLDER`,
   - In the build script replace `CHAT_GATEWAY_API_KEY_PLACEHOLDER` with the API key from Jenkins credentials etc.
@@ -167,4 +167,4 @@ If not set, the browser console will show
 
 - To enable the chat widget in CI, add a **Secret text** credential in Jenkins.
 - **ID:** `CHAT_GATEWAY_API_KEY` (Jenkinsfile looks up by this ID)
-- **Value:** An API key issued by the Chat Gateway (one of CHAT_GATEWAY_API_KEY)
+- **Value:** An API key issued by the TZ-Chat Gateway (one of CHAT_GATEWAY_API_KEY)

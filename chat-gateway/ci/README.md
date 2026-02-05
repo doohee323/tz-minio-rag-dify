@@ -1,4 +1,4 @@
-# Chat Gateway CI/CD
+# TZ-Chat Gateway CI/CD
 
 This folder contains the CI/CD setup for the **chat-gateway** service: Jenkins pipeline, Kubernetes deployment script, and environment-specific manifests.
 
