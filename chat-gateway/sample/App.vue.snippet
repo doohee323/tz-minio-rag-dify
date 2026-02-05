@@ -1,0 +1,18 @@
+<!-- ========== App.vue에 추가할 내용 (tz-drillquiz 기준) ========== -->
+
+<!-- 1) Template: 레이아웃 하단, Footer 다음에 한 줄 추가 -->
+    <AppFooter />
+    <ChatWidget />
+  </div>
+</template>
+
+<!-- 2) Script: import 추가 -->
+import AppFooter from '@/components/Footer.vue'
+import ChatWidget from '@/components/ChatWidget.vue'
+import authService from '@/services/authService'
+
+<!-- 3) Script: components 등록 -->
+  components: {
+    AppFooter,
+    ChatWidget
+  },
