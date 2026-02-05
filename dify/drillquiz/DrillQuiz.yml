@@ -1,9 +1,9 @@
 app:
-  description: CoinTutor Service Supporter
-  icon: 🤖
-  icon_background: '#FFEAD5'
+  description: DrillQuiz Service Supporter
+  icon: 📚
+  icon_background: '#E0F2FE'
   mode: advanced-chat
-  name: CoinTutor
+  name: DrillQuiz
   use_icon_as_answer_icon: false
 dependencies:
 - current_identifier: null
@@ -106,7 +106,14 @@ workflow:
         selected: false
         title: Start
         type: start
-        variables: []
+        variables:
+        - default: en
+          label: language
+          max_length: 10
+          options: []
+          required: false
+          type: text-input
+          variable: language
       height: 117
       id: '1711528708197'
       position:
@@ -161,12 +168,16 @@ workflow:
 
             Avoid mentioning that you obtained the information from the context.
 
-            And answer according to the language of the user''s question.'
+            Respond only in the language given by the "language" variable. Values: en=English, ko=Korean, zh=Chinese, ja=Japanese, es=Spanish. Current language: {{language}}. If empty or missing, use the language of the user''s question.'
         selected: false
         structured_output_enabled: true
         title: LLM
         type: llm
-        variables: []
+        variables:
+        - value_selector:
+          - '1711528708197'
+          - language
+          variable: language
         vision:
           enabled: false
       dragging: false
@@ -276,7 +287,7 @@ workflow:
           background: '#FEF7C3'
           content: 🕵️
         provider_id: a1744db9-36ab-44a2-abe2-20bcef718142
-        provider_name: CoinTutor RAG
+        provider_name: DrillQuiz RAG
         provider_type: api
         selected: false
         title: query

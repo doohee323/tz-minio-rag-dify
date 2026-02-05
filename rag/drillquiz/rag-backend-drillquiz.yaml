@@ -63,15 +63,21 @@ data:
     @limiter.limit(os.environ.get("RATE_LIMIT_QUERY", "20/minute"))
     def query(req: QueryRequest, request: Request):
         try:
+            question = (req.question or "").strip() or ""
             coll = (req.collection or "").strip() or COLLECTION
-            query_vector = embed_query(req.question)
+            query_vector = embed_query(question) if question else []
+            if not query_vector:
+                body = {"question": question, "results": []}
+                return JSONResponse(content=body, headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"})
             client = get_qdrant()
             response = client.query_points(
                 collection_name=coll,
                 query=query_vector,
                 limit=req.top_k,
             )
-            points = getattr(response, "points", None) or getattr(response, "result", []) or []
+            points = getattr(response, "points", None) or getattr(response, "result", None) or []
+            if points is None:
+                points = []
             results = [
                 {
                     "text": (getattr(p, "payload", None) or {}).get("text", ""),
@@ -81,7 +87,7 @@ data:
                 }
                 for p in points
             ]
-            body = {"question": req.question, "results": results}
+            body = {"question": question, "results": results}
             return JSONResponse(
                 content=body,
                 headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},

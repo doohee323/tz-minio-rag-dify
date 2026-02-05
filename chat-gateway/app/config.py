@@ -1,0 +1,63 @@
+from pydantic_settings import BaseSettings
+from functools import lru_cache
+
+
+class Settings(BaseSettings):
+    # 공통 Dify (시스템별만 쓸 때는 비워 둬도 됨)
+    dify_base_url: str = ""
+    dify_api_key: str = ""
+    jwt_secret: str
+    api_keys: str = ""
+    allowed_system_ids: str = ""
+    # /v1/chat-token 호출 허용 Origin (쉼표 구분). 비우면 검사 안 함.
+    allowed_chat_token_origins: str = ""
+    database_url: str = "sqlite+aiosqlite:///./chat_gateway.db"
+    dify_chatbot_token: str = ""
+    # 시스템별 Dify (비우면 공통 dify_base_url / dify_api_key 사용)
+    dify_drillquiz_base_url: str = ""
+    dify_drillquiz_api_key: str = ""
+    dify_cointutor_base_url: str = ""
+    dify_cointutor_api_key: str = ""
+
+    def get_dify_base_url(self, system_id: str | None) -> str:
+        if system_id:
+            key = f"dify_{system_id.lower()}_base_url"
+            url = getattr(self, key, None) or ""
+            if url.strip():
+                return url.rstrip("/")
+        return self.dify_base_url.rstrip("/")
+
+    def get_dify_api_key(self, system_id: str | None) -> str:
+        if system_id:
+            key = f"dify_{system_id.lower()}_api_key"
+            api_key = getattr(self, key, None) or ""
+            if api_key.strip():
+                return api_key.strip()
+        return self.dify_api_key or ""
+
+    @property
+    def api_keys_list(self) -> list[str]:
+        if not self.api_keys.strip():
+            return []
+        return [k.strip() for k in self.api_keys.split(",") if k.strip()]
+
+    @property
+    def allowed_system_ids_list(self) -> list[str]:
+        if not self.allowed_system_ids.strip():
+            return []
+        return [s.strip() for s in self.allowed_system_ids.split(",") if s.strip()]
+
+    @property
+    def allowed_chat_token_origins_list(self) -> list[str]:
+        if not self.allowed_chat_token_origins.strip():
+            return []
+        return [s.strip() for s in self.allowed_chat_token_origins.split(",") if s.strip()]
+
+    class Config:
+        env_file = ".env"
+        extra = "ignore"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

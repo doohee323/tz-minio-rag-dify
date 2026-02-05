@@ -22,3 +22,4 @@ export KUBECONFIG=~/.kube/your-config
 - `docs/rag-multi-topic.md` — 주제별 RAG 분리(CoinTutor/DrillQuiz), MinIO 경로, Dify 도구 URL
 - `docs/rag-requirements-and-plan.md` — 요구사항 및 Phase별 수행 계획
 - `docs/additional-requirements.md` — 스케일·통제·트래픽·iframe 인증·추적·F/U 등 추가 요구사항 및 운영 고려사항
+- `docs/dify-drillquiz-embed-and-tracking.md` — DrillQuiz + Dify 채팅 연동 시 사용자 정보 전달·추적·F/U (embed / API 대리 호출)

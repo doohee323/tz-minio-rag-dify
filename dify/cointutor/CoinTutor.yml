@@ -144,7 +144,14 @@ workflow:
         selected: false
         title: Start
         type: start
-        variables: []
+        variables:
+        - default: en
+          label: language
+          max_length: 10
+          options: []
+          required: false
+          type: text-input
+          variable: language
       height: 117
       id: '1711528708197'
       position:
@@ -326,11 +333,15 @@ workflow:
 
             Avoid mentioning that you obtained the information from the context.
 
-            And answer according to the language of the user''s question.'
+            Respond only in the language given by the "language" variable. Values: en=English, ko=Korean, zh=Chinese, ja=Japanese, es=Spanish. Current language: {{language}}. If empty or missing, use the language of the user''s question.'
         selected: false
         title: LLM
         type: llm
-        variables: []
+        variables:
+        - value_selector:
+          - '1711528708197'
+          - language
+          variable: language
         vision:
           enabled: false
       dragging: false
@@ -391,11 +402,15 @@ workflow:
 
             Avoid mentioning that you obtained the information from the context.
 
-            And answer according to the language of the user''s question.'
+            Respond only in the language given by the "language" variable. Values: en=English, ko=Korean, zh=Chinese, ja=Japanese, es=Spanish. Current language: {{language}}. If empty or missing, use the language of the user''s question.'
         selected: true
         title: 'LLM '
         type: llm
-        variables: []
+        variables:
+        - value_selector:
+          - '1711528708197'
+          - language
+          variable: language
         vision:
           enabled: false
       dragging: false

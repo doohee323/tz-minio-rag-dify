@@ -1,3 +1,7 @@
+# Env (secrets)
+.env
+chat-gateway/.env
+
 # Backup / generated files from install scripts
 *_bak
 *_bak.*
@@ -5,3 +9,6 @@
 *.yaml_bak
 *.yaml_bak.*
 *.yamle
+
+# Refer folder
+refer/
