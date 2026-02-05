@@ -27,8 +27,9 @@ pipeline {
         REGISTRY = 'doohee323'
         DOCKERHUB_CREDENTIALS_ID = 'DOCKERHUB_CREDENTIALS_ID'
 
-        // Domain configuration
+        // Domain configuration (DOMAIN_PLACEHOLDER = base domain, e.g. drillquiz.com; replaced in k8s manifests as chat.DOMAIN_PLACEHOLDER → chat.drillquiz.com)
         BASE_DOMAIN = "${BASE_DOMAIN ?: 'drillquiz.com'}"
+        DOMAIN_PLACEHOLDER = "${DOMAIN_PLACEHOLDER ?: 'drillquiz.com'}"
         
         GIT_USERNAME = 'doohee323'
         GIT_REPO_NAME = 'tz-argocd-repo'
@@ -191,6 +192,7 @@ pipeline {
                                             echo "  BASE_DOMAIN: ${BASE_DOMAIN}"
                                             echo "  APP_NAME: ${APP_NAME}"
                                             export BASE_DOMAIN=${BASE_DOMAIN}
+                                            export DOMAIN_PLACEHOLDER=${DOMAIN_PLACEHOLDER}
                                             export APP_NAME=${APP_NAME}
                                             export CHAT_GATEWAY_JWT_SECRET=${CHAT_GATEWAY_JWT_SECRET}
                                             export CHAT_GATEWAY_API_KEYS=${CHAT_GATEWAY_API_KEYS}

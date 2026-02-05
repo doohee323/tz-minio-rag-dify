@@ -884,8 +884,9 @@ deploy_to_kubernetes() {
     [[ -f "package.json" ]] && sed -i.bak "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" package.json && rm -f package.json.bak
     [[ -f "env" ]] && sed -i.bak "s|POSTGRES_HOST=.*|POSTGRES_HOST=${DB_HOST}|g" env && rm -f env.bak
 
-    # k8s.yaml file substitution (macOS compatible)
-    sed -i.bak "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
+    # k8s.yaml file substitution (macOS compatible). DOMAIN_PLACEHOLDER = base domain from Jenkins (e.g. drillquiz.com) so chat.DOMAIN_PLACEHOLDER → chat.drillquiz.com
+    DOMAIN_PLACEHOLDER_VALUE="${DOMAIN_PLACEHOLDER:-$BASE_DOMAIN}"
+    sed -i.bak "s/DOMAIN_PLACEHOLDER/${DOMAIN_PLACEHOLDER_VALUE}/g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
     sed -i.bak "s/BUILD_NUMBER_PLACEHOLDER/${BUILD_NUMBER}/g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
     sed -i.bak "s/STAGING/${STAGING}/g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
     sed -i.bak "s/GIT_BRANCH/${SECRET_SUFFIX}/g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
@@ -952,9 +953,10 @@ deploy_to_kubernetes() {
         log_info "🔍 DEBUG: Copying ci/k8s.yaml to ${TARGET_K8S_FILE}"
         cp ci/k8s.yaml ${TARGET_K8S_FILE}
         
-        # ArgoCD용 변수 치환 (macOS 호환)
+        # ArgoCD용 변수 치환 (macOS 호환). DOMAIN_PLACEHOLDER = base domain (e.g. drillquiz.com)
         log_info "🔧 Applying variable substitutions for ArgoCD deployment..."
-        sed -i.bak "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
+        DOMAIN_PLACEHOLDER_VALUE="${DOMAIN_PLACEHOLDER:-$BASE_DOMAIN}"
+        sed -i.bak "s/DOMAIN_PLACEHOLDER/${DOMAIN_PLACEHOLDER_VALUE}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         sed -i.bak "s/BUILD_NUMBER_PLACEHOLDER/${BUILD_NUMBER}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         sed -i.bak "s/GIT_BRANCH/${SECRET_SUFFIX}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         sed -i.bak "s/STAGING/${STAGING}/g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
