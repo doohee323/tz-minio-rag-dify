@@ -176,11 +176,11 @@ pipeline {
                                             exit 1
                                         fi
                                         echo "✅ Bash installation completed"
-                                        echo "🔍 Checking ci/k8s.sh file..."
-                                        ls -la ci/k8s.sh || echo "❌ ci/k8s.sh not found"
-                                        if [ -f "ci/k8s.sh" ]; then
-                                            echo "✅ ci/k8s.sh found, setting permissions..."
-                                            chmod +x ci/k8s.sh
+                                        echo "🔍 Checking chat-gateway/ci/k8s.sh file..."
+                                        ls -la chat-gateway/ci/k8s.sh || echo "❌ chat-gateway/ci/k8s.sh not found"
+                                        if [ -f "chat-gateway/ci/k8s.sh" ]; then
+                                            echo "✅ chat-gateway/ci/k8s.sh found, setting permissions..."
+                                            chmod +x chat-gateway/ci/k8s.sh
                                             echo "🚀 Starting Kubernetes deployment..."
                                             echo "  BUILD_NUMBER: ${BUILD_NUMBER}"
                                             echo "  GIT_BRANCH: ${GIT_BRANCH}"
@@ -197,13 +197,13 @@ pipeline {
                                             export DIFY_API_KEY=${DIFY_API_KEY}
                                             export DIFY_DRILLQUIZ_API_KEY=${DIFY_DRILLQUIZ_API_KEY}
                                             export DIFY_COINTUTOR_API_KEY=${DIFY_COINTUTOR_API_KEY}
-                                            ./ci/k8s.sh ${BUILD_NUMBER} ${GIT_BRANCH} ${NAMESPACE} deploy
+                                            cd chat-gateway && ./ci/k8s.sh ${BUILD_NUMBER} ${GIT_BRANCH} ${NAMESPACE} deploy
                                         else
-                                            echo "❌ ci/k8s.sh file not found in workspace"
+                                            echo "❌ chat-gateway/ci/k8s.sh file not found in workspace"
                                             echo "📁 Current directory contents:"
                                             ls -la
-                                            echo "📁 ci/ directory contents:"
-                                            ls -la ci/ || echo "ci/ directory not found"
+                                            echo "📁 chat-gateway/ci/ directory contents:"
+                                            ls -la chat-gateway/ci/ || echo "chat-gateway/ci/ directory not found"
                                             exit 1
                                         fi
                                     '''
