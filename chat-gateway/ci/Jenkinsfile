@@ -136,7 +136,7 @@ pipeline {
                         try {
                             withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS_ID}", url: '') {
                                 def image = "${REGISTRY}/${DOCKER_NAME}:${BUILD_NUMBER}"
-                                sh "docker build -t ${image} ."
+                                sh "docker build -t ${image} ./chat-gateway"
                                 echo "Pushing image: ${image}"
                                 sh "docker push ${image}"
                             }
