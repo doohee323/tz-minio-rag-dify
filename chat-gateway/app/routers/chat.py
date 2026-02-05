@@ -1,5 +1,7 @@
+import logging
 import time
 import jwt
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Security, status
 from sqlalchemy import select
 from app.database import get_db
@@ -12,6 +14,7 @@ from app.schemas import ChatRequest, ChatResponse, ConversationItem, MessageItem
 from app.sync_service import record_chat_to_db, sync_all_from_mapping
 
 router = APIRouter(prefix="/v1", tags=["chat"])
+logger = logging.getLogger("chat_gateway")
 
 # 위젯 셸(헤더·토글) 다국어. chat-gateway가 채팅 앱 전체 다국어 담당.
 CHAT_UI_STRINGS = {
@@ -55,44 +58,92 @@ async def post_chat(
     sid = body.system_id or (identity.system_id if identity else None)
     uid = body.user_id or (identity.user_id if identity else None)
     ident = _resolve_identity(identity, body, api_key, system_id=sid, user_id=uid)
-    # Use body for message/conversation_id; identity for user
-    result = await send_chat_message(
-        user=ident.dify_user,
-        query=body.message,
-        conversation_id=body.conversation_id,
-        inputs=body.inputs,
-        system_id=ident.system_id,
-    )
+
+    settings = get_settings()
+    dify_key = settings.get_dify_api_key(ident.system_id)
+    dify_base = settings.get_dify_base_url(ident.system_id)
+    if not dify_key or not dify_base:
+        logger.warning(
+            "Chat not configured for system_id=%s (missing Dify API key or base URL)",
+            ident.system_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Chat is not configured for this app.",
+        )
+
+    try:
+        result = await send_chat_message(
+            user=ident.dify_user,
+            query=body.message,
+            conversation_id=body.conversation_id,
+            inputs=body.inputs,
+            system_id=ident.system_id,
+        )
+    except httpx.HTTPStatusError as e:
+        logger.warning(
+            "Dify API error for system_id=%s: %s %s",
+            ident.system_id,
+            e.response.status_code,
+            (e.response.text or "")[:500],
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Chat service temporarily unavailable. Please try again.",
+        )
+    except httpx.RequestError as e:
+        logger.warning(
+            "Dify request error for system_id=%s: %s",
+            ident.system_id,
+            e,
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Chat service temporarily unavailable. Please try again.",
+        )
+
     conversation_id = result.get("conversation_id") or ""
     message_id = result.get("message_id")
     answer = result.get("answer", "")
-    if conversation_id:
-        # 매핑 저장 (sync 대상)
-        stmt = select(ConversationMapping).where(
-            ConversationMapping.system_id == ident.system_id,
-            ConversationMapping.user_id == ident.user_id,
-            ConversationMapping.conversation_id == conversation_id,
-        )
-        row = (await db.execute(stmt)).scalar_one_or_none()
-        if not row:
-            row = ConversationMapping(
-                system_id=ident.system_id,
-                user_id=ident.user_id,
-                dify_user=ident.dify_user,
-                conversation_id=conversation_id,
+
+    try:
+        if conversation_id:
+            stmt = select(ConversationMapping).where(
+                ConversationMapping.system_id == ident.system_id,
+                ConversationMapping.user_id == ident.user_id,
+                ConversationMapping.conversation_id == conversation_id,
             )
-            db.add(row)
-        # 채팅 한 건을 SQLite에 바로 기록 (별도 sync 없이)
-        await record_chat_to_db(
-            db,
+            row = (await db.execute(stmt)).scalar_one_or_none()
+            if not row:
+                row = ConversationMapping(
+                    system_id=ident.system_id,
+                    user_id=ident.user_id,
+                    dify_user=ident.dify_user,
+                    conversation_id=conversation_id,
+                )
+                db.add(row)
+            await record_chat_to_db(
+                db,
+                ident.system_id,
+                ident.user_id,
+                ident.dify_user,
+                conversation_id,
+                message_id,
+                body.message,
+                answer,
+            )
+    except Exception as e:
+        logger.warning(
+            "Failed to record chat for system_id=%s conversation_id=%s: %s",
             ident.system_id,
-            ident.user_id,
-            ident.dify_user,
             conversation_id,
-            message_id,
-            body.message,
-            answer,
+            e,
+            exc_info=True,
         )
+        await db.rollback()
+        # Still return the chat response; recording is best-effort.
+
     return ChatResponse(
         conversation_id=conversation_id,
         message_id=message_id,
