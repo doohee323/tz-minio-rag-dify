@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-gateway
+spec:
+  selector:
+    matchLabels:
+      app: chat-gateway
+  replicas: 2
+  minReadySeconds: 30
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        org: tz
+        team: devops
+        environment: main
+        app: chat-gateway
+    spec:
+      imagePullSecrets:
+        - name: tz-registrykey
+      containers:
+      - name: chat-gateway
+        image: doohee323/chat-gateway:BUILD_NUMBER_PLACEHOLDER
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8088
+        readinessProbe:
+          httpGet:
+            path: /docs
+            port: 8088
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /docs
+            port: 8088
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 1
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        envFrom:
+        - configMapRef:
+            name: chat-gateway-configmap-GIT_BRANCH
+        - secretRef:
+            name: chat-gateway-secret-GIT_BRANCH
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-gateway
+spec:
+  type: NodePort
+  selector:
+    app: chat-gateway
+  ports:
+  - port: 80
+    name: http
+    targetPort: 8088
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chat-gateway-configmap-GIT_BRANCH
+data:
+  DIFY_BASE_URL: ""
+  DIFY_DRILLQUIZ_BASE_URL: "https://dify.drillquiz.com"
+  DIFY_COINTUTOR_BASE_URL: ""
+  ALLOWED_CHAT_TOKEN_ORIGINS: "https://chat.DOMAIN_PLACEHOLDER,http://localhost:8080"
+  ALLOWED_SYSTEM_IDS: "drillquiz,cointutor"
+  DATABASE_URL: "sqlite+aiosqlite:///./chat_gateway.db"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chat-gateway
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "5"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: chat.DOMAIN_PLACEHOLDER
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chat-gateway
+            port:
+              number: 80
+  tls:
+    - hosts:
+        - chat.DOMAIN_PLACEHOLDER
+      secretName: chat-gateway
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: chat-gateway-secret-GIT_BRANCH
+type: Opaque
+data:
+  JWT_SECRET: #JWT_SECRET
+  API_KEYS: #API_KEYS
+  DIFY_API_KEY: #DIFY_API_KEY
+  DIFY_DRILLQUIZ_API_KEY: #DIFY_DRILLQUIZ_API_KEY
+  DIFY_COINTUTOR_API_KEY: #DIFY_COINTUTOR_API_KEY
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chat-gateway-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: chat-gateway
+
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: chat-gateway-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: chat-gateway
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70

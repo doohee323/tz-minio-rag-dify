@@ -1,0 +1,234 @@
+pipeline {
+    agent {
+        kubernetes {
+            label 'docker'
+            defaultContainer 'docker'
+        }
+    }
+    
+    environment {
+        GIT_BRANCH = "${env.BRANCH_NAME ?: env.GIT_BRANCH ?: env.CHANGE_BRANCH ?: 'main'}"
+        GIT_COMMITTER_EMAIL = "doohee323@gmail.com"
+
+        BUILD_NUMBER = "${env.BUILD_NUMBER ?: 'latest'}"
+        DOCKER_NAME = "chat-gateway"
+        APP_NAME = "chat-gateway"
+        DEPLOYMENT_NAME = 'chat-gateway'
+        NAMESPACE = "${(env.BRANCH_NAME ?: env.GIT_BRANCH ?: env.CHANGE_BRANCH ?: 'main').replaceAll('^origin/', '') == 'main' || (env.BRANCH_NAME ?: env.GIT_BRANCH ?: env.CHANGE_BRANCH ?: 'main').replaceAll('^origin/', '') == 'qa' ? 'devops' : 'devops-dev'}"
+        NODE_ENV = "development"
+        K8S_FILE = "k8s.yaml"
+
+        KUBECTL = "kubectl -n ${NAMESPACE}"
+        // Try both possible credential IDs - Jenkins credential ID might be 'my-ubuntu.config' or 'kubeconfig-jenkins'
+        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-jenkins'
+
+        GIT_CREDENTIAL = 'github-token'
+
+        REGISTRY = 'doohee323'
+        DOCKERHUB_CREDENTIALS_ID = 'DOCKERHUB_CREDENTIALS_ID'
+
+        // Domain configuration
+        BASE_DOMAIN = "${BASE_DOMAIN ?: 'drillquiz.com'}"
+        
+        GIT_USERNAME = 'doohee323'
+        GIT_REPO_NAME = 'tz-argocd-repo'
+    }
+
+    stages {
+        stage('Load Credentials') {
+            steps {
+                script {
+                    // Load credentials using withCredentials to ensure proper resolution
+                    // Required credentials
+                    try {
+                        withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GIT_TOKEN')]) {
+                            env.GIT_TOKEN = env.GIT_TOKEN
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  GITHUB_TOKEN credential not found, using empty string"
+                        env.GIT_TOKEN = ''
+                    }
+
+                    try {
+                        withCredentials([string(credentialsId: 'DOCKER_PASSWORD', variable: 'DOCKER_PASSWORD')]) {
+                            env.DOCKER_PASSWORD = env.DOCKER_PASSWORD
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  DOCKER_PASSWORD credential not found, using empty string"
+                        env.DOCKER_PASSWORD = ''
+                    }
+
+                    // ArgoCD credentials
+                    try {
+                        withCredentials([string(credentialsId: 'ARGOCD_PASSWORD', variable: 'ARGOCD_PASSWORD')]) {
+                            env.ARGOCD_PASSWORD = env.ARGOCD_PASSWORD
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  ARGOCD_PASSWORD credential not found, using empty string"
+                        env.ARGOCD_PASSWORD = ''
+                    }
+
+                    // Chat Gateway: JWT and Dify API keys
+                    try {
+                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_JWT_SECRET', variable: 'JWT_SECRET')]) {
+                            env.JWT_SECRET = env.JWT_SECRET
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  CHAT_GATEWAY_JWT_SECRET credential not found, using empty string"
+                        env.JWT_SECRET = ''
+                    }
+                    try {
+                        withCredentials([string(credentialsId: 'DIFY_DRILLQUIZ_API_KEY', variable: 'DIFY_DRILLQUIZ_API_KEY')]) {
+                            env.DIFY_DRILLQUIZ_API_KEY = env.DIFY_DRILLQUIZ_API_KEY
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  DIFY_DRILLQUIZ_API_KEY credential not found, using empty string"
+                        env.DIFY_DRILLQUIZ_API_KEY = ''
+                    }
+                    try {
+                        withCredentials([string(credentialsId: 'DIFY_COINTUTOR_API_KEY', variable: 'DIFY_COINTUTOR_API_KEY')]) {
+                            env.DIFY_COINTUTOR_API_KEY = env.DIFY_COINTUTOR_API_KEY
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  DIFY_COINTUTOR_API_KEY credential not found, using empty string"
+                        env.DIFY_COINTUTOR_API_KEY = ''
+                    }
+                    try {
+                        withCredentials([string(credentialsId: 'DIFY_API_KEY', variable: 'DIFY_API_KEY')]) {
+                            env.DIFY_API_KEY = env.DIFY_API_KEY
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  DIFY_API_KEY credential not found, using empty string"
+                        env.DIFY_API_KEY = ''
+                    }
+                    try {
+                        withCredentials([string(credentialsId: 'CHAT_GATEWAY_API_KEYS', variable: 'API_KEYS')]) {
+                            env.API_KEYS = env.API_KEYS
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  CHAT_GATEWAY_API_KEYS credential not found, using empty string"
+                        env.API_KEYS = ''
+                    }
+
+                    // ArgoCD configuration
+                    env.ARGOCD_ID = "tz-admin"
+                    env.ARGOCD_SERVER = 'argocd.drillquiz.com'
+                    env.ARGOCD_REPO_URL = 'https://github.com/doohee323/tz-argocd-repo.git'
+                    env.ARGOCD_ENABLED = "${(env.BRANCH_NAME ?: env.GIT_BRANCH ?: env.CHANGE_BRANCH ?: 'main').replaceAll('^origin/', '') == 'qa' ? 'true' : 'false'}"
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                container('docker') {
+                    script {
+                        checkout scm
+                    }
+                }
+            }
+        }
+
+        stage('Build & Push Image') {
+            steps {
+                container('docker') {
+                    script {
+                        try {
+                            withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS_ID}", url: '') {
+                                def image = "${REGISTRY}/${DOCKER_NAME}:${BUILD_NUMBER}"
+                                sh "docker build -t ${image} ."
+                                echo "Pushing image: ${image}"
+                                sh "docker push ${image}"
+                            }
+                        } catch (err) {
+                            echo "Docker push failed: ${err}"
+                            error("Stopping pipeline due to push failure.")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                container('kubectl') {
+                    script {
+                        try {
+                            // KUBECONFIG is required for Kubernetes deployment
+                            // Use credential ID directly (not via environment variable to avoid resolution issues)
+                            try {
+                                withCredentials([file(credentialsId: 'kubeconfig-jenkins', variable: 'KUBECONFIG')]) {
+                                    echo "✅ Using KUBECONFIG credential: kubeconfig-jenkins"
+                                    sh '''
+                                        export PATH=$PATH:.:
+                                        echo "🔧 Installing bash..."
+                                        if command -v apk >/dev/null 2>&1; then
+                                            echo "📦 Using Alpine Linux package manager (apk)..."
+                                            apk add --no-cache bash
+                                        elif command -v apt-get >/dev/null 2>&1; then
+                                            echo "📦 Using Debian/Ubuntu package manager (apt-get)..."
+                                            apt-get update && apt-get install -y bash
+                                        elif command -v yum >/dev/null 2>&1; then
+                                            echo "📦 Using CentOS/RHEL package manager (yum)..."
+                                            yum install -y bash
+                                        else
+                                            echo "❌ No supported package manager found"
+                                            exit 1
+                                        fi
+                                        echo "✅ Bash installation completed"
+                                        echo "🔍 Checking ci/k8s.sh file..."
+                                        ls -la ci/k8s.sh || echo "❌ ci/k8s.sh not found"
+                                        if [ -f "ci/k8s.sh" ]; then
+                                            echo "✅ ci/k8s.sh found, setting permissions..."
+                                            chmod +x ci/k8s.sh
+                                            echo "🚀 Starting Kubernetes deployment..."
+                                            echo "  BUILD_NUMBER: ${BUILD_NUMBER}"
+                                            echo "  GIT_BRANCH: ${GIT_BRANCH}"
+                                            echo "  NAMESPACE: ${NAMESPACE}"
+                                            echo "  ARGOCD_ENABLED: ${ARGOCD_ENABLED}"
+                                            echo "  ARGOCD_SERVER: ${ARGOCD_SERVER}"
+                                            echo "  ARGOCD_REPO_URL: ${ARGOCD_REPO_URL}"
+                                            echo "  BASE_DOMAIN: ${BASE_DOMAIN}"
+                                            echo "  APP_NAME: ${APP_NAME}"
+                                            export BASE_DOMAIN=${BASE_DOMAIN}
+                                            export APP_NAME=${APP_NAME}
+                                            export JWT_SECRET=${JWT_SECRET}
+                                            export API_KEYS=${API_KEYS}
+                                            export DIFY_API_KEY=${DIFY_API_KEY}
+                                            export DIFY_DRILLQUIZ_API_KEY=${DIFY_DRILLQUIZ_API_KEY}
+                                            export DIFY_COINTUTOR_API_KEY=${DIFY_COINTUTOR_API_KEY}
+                                            ./ci/k8s.sh ${BUILD_NUMBER} ${GIT_BRANCH} ${NAMESPACE} deploy
+                                        else
+                                            echo "❌ ci/k8s.sh file not found in workspace"
+                                            echo "📁 Current directory contents:"
+                                            ls -la
+                                            echo "📁 ci/ directory contents:"
+                                            ls -la ci/ || echo "ci/ directory not found"
+                                            exit 1
+                                        fi
+                                    '''
+                                }
+                            } catch (Exception e) {
+                                error("❌ KUBECONFIG credential 'kubeconfig-jenkins' is required but not found in Jenkins. Please configure the credential in Jenkins Credentials Store. Error: ${e.getMessage()}")
+                            }
+                        } catch (err) {
+                            echo "kubectl failed: ${err}"
+                            error("Stopping pipeline due to kubectl failure.")
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline completed successfully"
+        }
+        failure {
+            echo "❌ Pipeline failed"
+        }
+    }
+}
+
