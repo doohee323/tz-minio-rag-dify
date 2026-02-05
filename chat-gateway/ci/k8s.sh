@@ -918,8 +918,10 @@ deploy_to_kubernetes() {
     awk -v key="$DIFY_DRILLQUIZ_API_KEY_B64" '{gsub(/#DIFY_DRILLQUIZ_API_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
     awk -v key="$DIFY_COINTUTOR_API_KEY_B64" '{gsub(/#DIFY_COINTUTOR_API_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
 
-    # Update ConfigMap (for database host setup)
-    kubectl -n ${NAMESPACE} create configmap drillquiz-configmap-${SECRET_SUFFIX} --from-env-file=env --dry-run=client -o yaml | kubectl -n ${NAMESPACE} apply -f -
+    # Update ConfigMap from env file (skip if no env file, e.g. chat-gateway uses ConfigMap in k8s.yaml only)
+    if [ -f "env" ]; then
+        kubectl -n ${NAMESPACE} create configmap drillquiz-configmap-${SECRET_SUFFIX} --from-env-file=env --dry-run=client -o yaml | kubectl -n ${NAMESPACE} apply -f -
+    fi
 
     # Delete existing resources (continue even if failed)
     kubectl -n ${NAMESPACE} delete -f ci/k8s.yaml || log_info "No resources to delete (normal)"
