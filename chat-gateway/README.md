@@ -4,6 +4,20 @@
 
 ---
 
+## Intro page (root URL)
+
+When the server is running, the **root URL** (`http://localhost:8088/` or `https://<gateway-host>/`) serves an intro page that describes:
+
+- **What TZ-Chat Gateway is** and how it fits in the tz-minio-rag-dify stack
+- **Workflow**: check out this repo → register your app (using sample apps DrillQuiz / CoinTutor as reference) → get token & open chat → chat
+- **How the app operates**: request flow from client through the gateway and Dify to RAG, then back
+- **Architecture**: components (Ingress, TZ-Chat Gateway, Dify, RAG Backend, Qdrant, MinIO) and their roles
+- **Apply to your project**: steps to add chat to an existing app (deploy gateway, env, backend token, frontend widget, CORS & CSP)
+
+The page also links to the **sample integration site** ([devops.drillquiz.com](https://devops.drillquiz.com/)), GitHub source, API docs (`/docs`), chat page (`/chat`), and cache/history UI (`/cache`).
+
+---
+
 ## Usage
 
 ### 1) Chat page (use in browser)
@@ -180,9 +194,11 @@ chat-gateway/
 │   ├── dify_client.py   # Dify API client
 │   ├── templates.py     # Jinja2 templates
 │   └── routers/
+│       ├── index.py     # GET / (intro page)
 │       ├── chat.py      # POST/GET /v1/chat, /v1/conversations, ...
 │       └── chat_page.py # GET /chat?token=<JWT>
 ├── templates/
+│   ├── index.html       # Intro page (root /): workflow, architecture, apply-to-project, sample site link
 │   └── chat_api.html    # Chat page (conversation list, messages, send, DB recording)
 └── sample/              # Vue integration: widget component, env example, integration guide
     ├── INTEGRATION.md   # Integration steps (copy files, authService, env, CI)
