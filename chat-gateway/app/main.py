@@ -46,6 +46,8 @@ CORS_ORIGINS_DEFAULT = [
     "https://us-dev.drillquiz.com",
     "https://us.drillquiz.com",
     "https://us-qa.drillquiz.com",
+    "https://devops.drillquiz.com",
+    "https://leetcode.drillquiz.com",
     "https://cointutor.net",
     "https://www.cointutor.net",
     "https://dev.cointutor.net",
