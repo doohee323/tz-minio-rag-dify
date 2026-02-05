@@ -1,0 +1,14 @@
+# 트래픽/리소스 통제 (§3): rag 네임스페이스 상한
+# 필요 시 수치 조정 또는 삭제
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: rag-quota
+  namespace: rag
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "20"

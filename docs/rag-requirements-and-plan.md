@@ -251,7 +251,7 @@ kubectl -n rag get all
    → Qdrant, 컬렉션 `rag_docs`, RAG backend/frontend, Ingress 적용.
 
 4. **Phase 4**  
-   `rag-ingestion-secret` 생성(MinIO + OpenAI 또는 Gemini 키) 후,  
+   `rag-ingestion-secret-cointutor`, `rag-ingestion-secret-drillquiz` 생성(MinIO + OpenAI 또는 Gemini 키) 후,  
    MinIO `rag-docs` 버킷 `raw/`에 테스트 문서 업로드 →  
    `kubectl -n rag create job --from=cronjob/rag-ingestion-cronjob ingest-manual-1` 등으로 1회 인덱싱 →  
    Qdrant points_count 확인.

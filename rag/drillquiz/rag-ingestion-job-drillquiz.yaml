@@ -1,5 +1,5 @@
 # Job: DrillQuiz 전용 인덱싱 (MinIO raw/drillquiz/ -> Qdrant rag_docs_drillquiz)
-# Secret rag-ingestion-secret, ConfigMap rag-ingestion-script 필요
+# Secret rag-ingestion-secret-drillquiz, ConfigMap rag-ingestion-script 필요
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -22,7 +22,7 @@ spec:
           python /config/ingest.py
         envFrom:
         - secretRef:
-            name: rag-ingestion-secret
+            name: rag-ingestion-secret-drillquiz
         env:
         - name: MINIO_ENDPOINT
           value: "minio.devops.svc.cluster.local"

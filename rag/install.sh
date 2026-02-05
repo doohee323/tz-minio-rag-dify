@@ -58,6 +58,12 @@ kubectl apply -f cointutor/rag-backend.yaml -n "${NS}"
 kubectl apply -f drillquiz/rag-backend-drillquiz.yaml -n "${NS}"
 kubectl apply -f rag-frontend.yaml -n "${NS}"
 
+echo "[5b/7] HPA (min=1, max=1 기본)"
+kubectl apply -f rag-hpa.yaml -n "${NS}" 2>/dev/null || true
+
+echo "[5c/7] ResourceQuota (rag 네임스페이스 상한)"
+kubectl apply -f rag-resource-quota.yaml -n "${NS}" 2>/dev/null || true
+
 echo "[6/7] Ingress (rag, rag-ui)"
 sed -e "s/k8s_project/${k8s_project}/g" -e "s/k8s_domain/${k8s_domain}/g" rag-ingress.yaml > rag-ingress.yaml_bak
 kubectl apply -f rag-ingress.yaml_bak -n "${NS}"
@@ -76,14 +82,15 @@ echo "  Backend:   rag.default.${k8s_project}.${k8s_domain}, rag.${k8s_domain}"
 echo "  Frontend:  rag-ui.default.${k8s_project}.${k8s_domain}, rag-ui.${k8s_domain}"
 echo "  Qdrant:    kubectl -n ${NS} port-forward svc/qdrant 6333:6333"
 echo "  MinIO:     devops 네임스페이스 (rag-docs 버킷은 콘솔에서 생성)"
-echo "  인덱서:    Secret rag-ingestion-secret 생성 후 Job/CronJob 사용 (docs/rag-multi-topic.md 참고)"
+echo "  인덱서:    Secret rag-ingestion-secret-cointutor, rag-ingestion-secret-drillquiz 생성 후 Job/CronJob 사용 (docs/rag-multi-topic.md 참고)"
 kubectl get pods,svc,ingress,cronjob -n "${NS}" 2>/dev/null || true
-if ! kubectl get secret rag-ingestion-secret -n "${NS}" &>/dev/null; then
+if ! kubectl get secret rag-ingestion-secret-cointutor -n "${NS}" &>/dev/null || ! kubectl get secret rag-ingestion-secret-drillquiz -n "${NS}" &>/dev/null; then
   echo ""
-  echo "⚠️  Secret rag-ingestion-secret 이 없어 Backend Pod이 CreateContainerConfigError 상태입니다."
-  echo "   아래처럼 생성 후 Pod이 자동으로 기동됩니다 (README.md 참고)."
+  echo "⚠️  Secret rag-ingestion-secret-cointutor 또는 rag-ingestion-secret-drillquiz 가 없어 Backend Pod이 CreateContainerConfigError 상태입니다."
+  echo "   아래처럼 두 개 생성 후 Pod이 자동으로 기동됩니다 (README.md 참고)."
   echo "   MINIO_USER=\$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)"
   echo "   MINIO_PASS=\$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)"
-  echo "   kubectl create secret generic rag-ingestion-secret -n ${NS} --from-literal=MINIO_ACCESS_KEY=\"\$MINIO_USER\" --from-literal=MINIO_SECRET_KEY=\"\$MINIO_PASS\" --from-literal=GEMINI_API_KEY='YOUR_GEMINI_KEY'"
+  echo "   kubectl create secret generic rag-ingestion-secret-cointutor -n ${NS} --from-literal=MINIO_ACCESS_KEY=\"\$MINIO_USER\" --from-literal=MINIO_SECRET_KEY=\"\$MINIO_PASS\" --from-literal=GEMINI_API_KEY='YOUR_GEMINI_KEY'"
+  echo "   kubectl create secret generic rag-ingestion-secret-drillquiz -n ${NS} --from-literal=MINIO_ACCESS_KEY=\"\$MINIO_USER\" --from-literal=MINIO_SECRET_KEY=\"\$MINIO_PASS\" --from-literal=GEMINI_API_KEY='YOUR_GEMINI_KEY'"
 fi
 exit 0

@@ -82,7 +82,7 @@ summary() {
   echo "  RAG:      rag NS, Qdrant, rag-backend, rag-backend-drillquiz, CronJob"
   echo "  Dify:     dify NS (RAG 연동 시 Web UI에서 도구 URL 설정)"
   echo ""
-  echo "  참고: rag-ingestion-secret 없으면 RAG Backend Pod이 실패합니다."
+  echo "  참고: rag-ingestion-secret-cointutor, rag-ingestion-secret-drillquiz 없으면 RAG Backend Pod이 실패합니다."
   echo "        rag/README.md, docs/rag-multi-topic.md 체크리스트 참고."
   echo "=============================================="
 }

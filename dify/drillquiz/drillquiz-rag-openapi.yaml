@@ -1,5 +1,6 @@
 # DrillQuiz RAG 백엔드 OpenAPI 스키마 (Dify 커스텀 도구용)
-# "커스텀 도구 만들기" → 이름 "DrillQuiz RAG", 스키마에 이 내용 붙여넣기
+# "커스텀 도구 만들기" → 이름 "DrillQuiz RAG", 스키마 칸에 이 내용 붙여넣기
+# DrillQuiz 전용: rag-backend-drillquiz(rag_docs_drillquiz) 호출
 openapi: 3.0.0
 info:
   title: DrillQuiz RAG API
@@ -7,12 +8,12 @@ info:
   version: 1.0.0
 servers:
   - url: http://rag-backend-drillquiz.rag.svc.cluster.local:8000
-    description: RAG Backend DrillQuiz (K8s 내부, 방법 A)
+    description: DrillQuiz RAG Backend (K8s 내부)
 paths:
   /query:
     post:
-      summary: 질문으로 지식 검색 (DrillQuiz)
-      description: DrillQuiz 문서만 검색
+      summary: 질문으로 DrillQuiz 지식 검색
+      description: 사용자 질문으로 rag_docs_drillquiz 벡터 검색 후 관련 청크 목록 반환
       operationId: query
       requestBody:
         required: true
@@ -30,10 +31,6 @@ paths:
                   type: integer
                   default: 5
                   description: 반환할 결과 개수
-                collection:
-                  type: string
-                  description: DrillQuiz 컬렉션 (고정)
-                  default: rag_docs_drillquiz
       responses:
         "200":
           description: 검색 결과

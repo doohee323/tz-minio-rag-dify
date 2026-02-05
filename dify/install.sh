@@ -94,6 +94,11 @@ if [[ -f dify-ingress.yaml ]]; then
   k apply -f dify-ingress.yaml_bak -n "${NS}" 2>/dev/null || true
 fi
 
+echo "[5b/5] HPA (min=1, max=1 기본)"
+if [[ -f dify-hpa.yaml ]]; then
+  k apply -f dify-hpa.yaml -n "${NS}" 2>/dev/null || true
+fi
+
 echo ""
 echo "=== Dify 설치 완료 (Phase 7) ==="
 echo "  Console:  https://dify.default.${k8s_project}.${k8s_domain} 또는 https://dify.${k8s_domain}"

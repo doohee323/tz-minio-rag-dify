@@ -43,7 +43,7 @@ data:
         })
         .then(function(d) { out.textContent = JSON.stringify(d, null, 2); })
         .catch(function(e) {
-          out.textContent = 'Error: ' + e.message + '\n\n※ RAG Backend Pod 확인: kubectl get pods -n rag\n   Secret 없으면: rag-ingestion-secret (MINIO_*, GEMINI_API_KEY)';
+          out.textContent = 'Error: ' + e.message + '\n\n※ RAG Backend Pod 확인: kubectl get pods -n rag\n   Secret 없으면: rag-ingestion-secret-cointutor, rag-ingestion-secret-drillquiz (MINIO_*, GEMINI_API_KEY)';
         });
     }
     </script>
@@ -70,6 +70,10 @@ spec:
       containers:
       - name: frontend
         image: nginx:alpine
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
         volumeMounts:
         - name: html
           mountPath: /usr/share/nginx/html

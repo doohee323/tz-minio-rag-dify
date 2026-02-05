@@ -11,6 +11,9 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-ssl-verify: 'false'
     nginx.ingress.kubernetes.io/ssl-redirect: 'false'
     cert-manager.io/cluster-issuer: "selfsigned-issuer"
+    # 트래픽 통제 (§3): IP당 RPS·동시 접속 제한 (초과 시 503)
+    nginx.ingress.kubernetes.io/limit-rps: "30"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
 spec:
   rules:
   - host: rag.k8s_domain

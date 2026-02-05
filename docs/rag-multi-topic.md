@@ -105,8 +105,8 @@ rag-docs/
 
 ### 5.3 공통 사항
 
-- 두 백엔드 모두 **같은 ConfigMap** `rag-backend-script` 사용. 스크립트는 `COLLECTION` 환경 변수를 읽어 고정 컬렉션만 검색.
-- Secret `rag-ingestion-secret`(Gemini 등) 동일 사용.
+- CoinTutor 백엔드는 ConfigMap `rag-backend-script`, DrillQuiz 백엔드는 ConfigMap `rag-backend-drillquiz-script`를 각각 사용(주제별 분리). 스크립트는 `COLLECTION` 환경 변수를 읽어 해당 컬렉션만 검색.
+- Secret: CoinTutor는 `rag-ingestion-secret-cointutor`, DrillQuiz는 `rag-ingestion-secret-drillquiz` 사용 (주제별 분리, 내용은 동일해도 됨).
 
 ### 5.4 Dify 연결
 

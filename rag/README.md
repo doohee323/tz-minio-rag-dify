@@ -12,17 +12,25 @@ bash install.sh
 - VM 내부: `/vagrant/tz-local/resource/rag/install.sh`
 - 로컬: `KUBECONFIG=~/.kube/topzone.iptime.org.config bash install.sh`
 
-### 설치 후 필수: Secret 생성
+### 설치 후 필수: Secret 생성 (주제별 분리)
 
-RAG 백엔드(검색 시 Gemini 임베딩)와 인덱서 Job/CronJob이 사용하는 `rag-ingestion-secret`이 없으면 Backend Pod이 기동하지 않고, 검색 시 `API key not valid` 오류가 난다. **설치 직후** 아래를 실행한다.
+RAG 백엔드와 인덱서 Job/CronJob은 주제별 Secret을 사용한다. `rag-ingestion-secret-cointutor`, `rag-ingestion-secret-drillquiz`가 없으면 Backend Pod이 기동하지 않고, 검색 시 `API key not valid` 오류가 난다. **설치 직후** 아래를 실행한다 (두 Secret 모두 동일한 값으로 생성해도 됨).
 
 ```bash
 MINIO_USER=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)
 MINIO_PASS=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)
-kubectl create secret generic rag-ingestion-secret -n rag \
+GEMINI_KEY='여기에_유효한_Gemini_API_키'
+
+kubectl create secret generic rag-ingestion-secret-cointutor -n rag \
   --from-literal=MINIO_ACCESS_KEY="$MINIO_USER" \
   --from-literal=MINIO_SECRET_KEY="$MINIO_PASS" \
-  --from-literal=GEMINI_API_KEY='여기에_유효한_Gemini_API_키' \
+  --from-literal=GEMINI_API_KEY="$GEMINI_KEY" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic rag-ingestion-secret-drillquiz -n rag \
+  --from-literal=MINIO_ACCESS_KEY="$MINIO_USER" \
+  --from-literal=MINIO_SECRET_KEY="$MINIO_PASS" \
+  --from-literal=GEMINI_API_KEY="$GEMINI_KEY" \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
@@ -62,7 +70,7 @@ cd tz-local/resource/rag
 | `rag-ingress.yaml` | Ingress (rag.*, rag-ui.*) — install.sh에서 k8s_project/k8s_domain 치환 |
 | `rag-ingestion-cronjob.yaml` | (레거시) CronJob raw/ → rag_docs |
 | `rag-ingestion-job.yaml` | (레거시) Job 1회 실행 |
-| `rag-ingestion-secret.example.yaml` | Secret 예시 (MinIO + OpenAI/Gemini 키) |
+| `rag-ingestion-secret.example.yaml` | Secret 예시 (cointutor/drillquiz 각각 MinIO + OpenAI/Gemini 키) |
 | `reset-rag-collections.sh` | Qdrant 컬렉션 초기화 (cointutor \| drillquiz \| all) [reindex] |
 | `scripts/ingest.py` | 인덱서 스크립트 (install.sh에서 ConfigMap으로 올림) |
 
@@ -70,42 +78,34 @@ cd tz-local/resource/rag
 
 **흐름**: MinIO 버킷 `rag-docs`의 `raw/` 아래 PDF·txt → 텍스트 추출 → 청킹(500자, 50자 overlap) → **임베딩(OpenAI 또는 Gemini)** → Qdrant 컬렉션 `rag_docs`에 upsert.
 
-### 1. Secret 생성 (필수)
+### 1. Secret 생성 (필수, 주제별)
 
-인덱서 Job/CronJob은 Secret `rag-ingestion-secret`을 사용합니다. **OpenAI** 또는 **Gemini** 중 하나만 있으면 됩니다.
+인덱서 Job/CronJob과 백엔드는 주제별 Secret을 사용합니다. CoinTutor → `rag-ingestion-secret-cointutor`, DrillQuiz → `rag-ingestion-secret-drillquiz`. **OpenAI** 또는 **Gemini** 중 하나만 있으면 됩니다. (보통 두 Secret을 같은 값으로 생성.)
 
-**OpenAI 사용 시:**
+**Gemini 사용 시 (권장):**
 ```bash
 MINIO_USER=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)
 MINIO_PASS=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)
-kubectl create secret generic rag-ingestion-secret -n rag \
-  --from-literal=MINIO_ACCESS_KEY="$MINIO_USER" \
-  --from-literal=MINIO_SECRET_KEY="$MINIO_PASS" \
-  --from-literal=OPENAI_API_KEY='sk-...'
-```
-
-**Gemini 사용 시:** Secret에 `GEMINI_API_KEY`(또는 `GOOGLE_API_KEY`)를 넣고, Job/CronJob의 env에서 `EMBEDDING_PROVIDER=gemini`, `EMBEDDING_MODEL=gemini-embedding-001`로 설정.
-```bash
-MINIO_USER=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)
-MINIO_PASS=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)
-kubectl create secret generic rag-ingestion-secret -n rag \
-  --from-literal=MINIO_ACCESS_KEY="$MINIO_USER" \
-  --from-literal=MINIO_SECRET_KEY="$MINIO_PASS" \
+kubectl create secret generic rag-ingestion-secret-cointutor -n rag \
+  --from-literal=MINIO_ACCESS_KEY="$MINIO_USER" --from-literal=MINIO_SECRET_KEY="$MINIO_PASS" \
+  --from-literal=GEMINI_API_KEY='...'
+kubectl create secret generic rag-ingestion-secret-drillquiz -n rag \
+  --from-literal=MINIO_ACCESS_KEY="$MINIO_USER" --from-literal=MINIO_SECRET_KEY="$MINIO_PASS" \
   --from-literal=GEMINI_API_KEY='...'
 ```
-Job/CronJob YAML에서 `EMBEDDING_PROVIDER`를 `gemini`로, `EMBEDDING_MODEL`을 `gemini-embedding-001`로 바꾸면 됩니다. Gemini는 1536 차원(기본)으로 Qdrant `rag_docs`와 호환됩니다.
+
+**OpenAI 사용 시:** 위와 동일하게 두 Secret을 만들고 `OPENAI_API_KEY`를 넣으면 됩니다.
 
 #### MinIO 시크릿 복사 (devops → rag)
 
-이미 `rag-ingestion-secret`이 있고 OpenAI/Gemini 키만 있을 때, MinIO 접근용 키는 **devops 네임스페이스의 MinIO 시크릿**에서 복사해 넣으면 된다.
+이미 Secret이 있고 OpenAI/Gemini 키만 있을 때, MinIO 접근용 키는 **devops 네임스페이스의 MinIO 시크릿**에서 복사해 넣으면 된다.
 
 ```bash
 MINIO_USER=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootUser}' | base64 -d)
 MINIO_PASS=$(kubectl get secret minio -n devops -o jsonpath='{.data.rootPassword}' | base64 -d)
-kubectl patch secret rag-ingestion-secret -n rag -p '{"data":{"MINIO_ACCESS_KEY":"'$(echo -n "$MINIO_USER" | base64 | tr -d '\n')'","MINIO_SECRET_KEY":"'$(echo -n "$MINIO_PASS" | base64 | tr -d '\n')'"}}'
+kubectl patch secret rag-ingestion-secret-cointutor -n rag -p '{"data":{"MINIO_ACCESS_KEY":"'$(echo -n "$MINIO_USER" | base64 | tr -d '\n')'","MINIO_SECRET_KEY":"'$(echo -n "$MINIO_PASS" | base64 | tr -d '\n')'"}}'
+kubectl patch secret rag-ingestion-secret-drillquiz -n rag -p '{"data":{"MINIO_ACCESS_KEY":"'$(echo -n "$MINIO_USER" | base64 | tr -d '\n')'","MINIO_SECRET_KEY":"'$(echo -n "$MINIO_PASS" | base64 | tr -d '\n')'"}}'
 ```
-
-새로 시크릿을 만드는 경우에는 위 "OpenAI 사용 시" / "Gemini 사용 시" 블록처럼 `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`에 위와 동일한 값을 넣어서 생성하면 된다.
 
 ### 2. MinIO 버킷 및 raw/ 업로드
 
@@ -153,7 +153,7 @@ CronJob `rag-ingestion`은 매일 02:00에 같은 인덱서 스크립트를 실�
 | 2. Pod 볼륨 | CronJob/Job의 `volumes[]`에 `configMap: name: rag-ingestion-script` 지정, 컨테이너에서 `volumeMounts: mountPath: /config` 로 마운트. |
 | 3. 컨테이너 안 경로 | Pod 안에서는 스크립트가 **`/config/ingest.py`** 로 보임. |
 | 4. 실행 | 컨테이너 `command`: `pip install ... && python /config/ingest.py`. 즉 Python 이미지로 기동한 뒤 마운트된 스크립트를 실행. |
-| 5. 환경 | `envFrom: secretRef: rag-ingestion-secret` 으로 MinIO/OpenAI/Gemini 키 주입, 나머지(QDRANT_HOST, MINIO_ENDPOINT 등)는 CronJob/Job의 `env[]`로 주입. |
+| 5. 환경 | `envFrom: secretRef: rag-ingestion-secret-cointutor` 또는 `-drillquiz` 로 MinIO/OpenAI/Gemini 키 주입, 나머지(QDRANT_HOST, MINIO_ENDPOINT 등)는 CronJob/Job의 `env[]`로 주입. |
 
 - **CronJob**: 매일 02:00에 스케줄러가 Job을 하나 생성 → Pod 기동 → 위 순서로 `ingest.py` 실행.
 - **1회만 실행**: `kubectl apply -f cointutor/rag-ingestion-job-cointutor.yaml -n rag` (또는 drillquiz) 또는 `./reset-rag-collections.sh cointutor reindex`.

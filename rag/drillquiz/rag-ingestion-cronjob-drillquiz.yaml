@@ -27,7 +27,7 @@ spec:
               python /config/ingest.py
             envFrom:
             - secretRef:
-                name: rag-ingestion-secret
+                name: rag-ingestion-secret-drillquiz
             env:
             - name: MINIO_ENDPOINT
               value: "minio.devops.svc.cluster.local"
