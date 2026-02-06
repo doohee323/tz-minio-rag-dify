@@ -4,7 +4,6 @@ FROM node:18-alpine AS frontend
 WORKDIR /build
 COPY src ./src
 COPY public ./public
-COPY config ./config
 COPY package*.json vue.config.js babel.config.js ./
 COPY env-frontend .env
 RUN CYPRESS_INSTALL_BINARY=0 npm install --no-audit --loglevel=info && npm run build:prod
