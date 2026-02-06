@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     # MinIO for file upload: rag-docs/raw/{system_id}/filename
     minio_endpoint: str = Field("localhost", validation_alias="MINIO_ENDPOINT")
     minio_port: Annotated[int, BeforeValidator(_parse_minio_port)] = Field(
-        9000, validation_alias="MINIO_PORT"
+        9000, validation_alias=AliasChoices("MINIO_SERVICE_PORT", "MINIO_PORT")
     )
     minio_bucket: str = Field("rag-docs", validation_alias="MINIO_BUCKET")
     minio_access_key: str = Field("", validation_alias="MINIO_ACCESS_KEY")
