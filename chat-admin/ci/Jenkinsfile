@@ -79,30 +79,6 @@ pipeline {
                         env.CHAT_GATEWAY_JWT_SECRET = ''
                     }
                     try {
-                        withCredentials([string(credentialsId: 'DIFY_DRILLQUIZ_API_KEY', variable: 'DIFY_DRILLQUIZ_API_KEY')]) {
-                            env.DIFY_DRILLQUIZ_API_KEY = env.DIFY_DRILLQUIZ_API_KEY
-                        }
-                    } catch (Exception e) {
-                        echo "⚠️  DIFY_DRILLQUIZ_API_KEY credential not found, using empty string"
-                        env.DIFY_DRILLQUIZ_API_KEY = ''
-                    }
-                    try {
-                        withCredentials([string(credentialsId: 'DIFY_COINTUTOR_API_KEY', variable: 'DIFY_COINTUTOR_API_KEY')]) {
-                            env.DIFY_COINTUTOR_API_KEY = env.DIFY_COINTUTOR_API_KEY
-                        }
-                    } catch (Exception e) {
-                        echo "⚠️  DIFY_COINTUTOR_API_KEY credential not found, using empty string"
-                        env.DIFY_COINTUTOR_API_KEY = ''
-                    }
-                    try {
-                        withCredentials([string(credentialsId: 'DIFY_API_KEY', variable: 'DIFY_API_KEY')]) {
-                            env.DIFY_API_KEY = env.DIFY_API_KEY
-                        }
-                    } catch (Exception e) {
-                        echo "⚠️  DIFY_API_KEY credential not found, using empty string"
-                        env.DIFY_API_KEY = ''
-                    }
-                    try {
                         withCredentials([string(credentialsId: 'CHAT_GATEWAY_API_KEY', variable: 'CHAT_GATEWAY_API_KEY')]) {
                             env.CHAT_GATEWAY_API_KEY = CHAT_GATEWAY_API_KEY
                         }
@@ -117,6 +93,22 @@ pipeline {
                     } catch (Exception e) {
                         echo "⚠️  POSTGRES_PASSWORD credential not found, using empty string"
                         env.POSTGRES_PASSWORD = ''
+                    }
+                    try {
+                        withCredentials([string(credentialsId: 'MINIO_ACCESS_KEY', variable: 'MINIO_ACCESS_KEY')]) {
+                            env.MINIO_ACCESS_KEY = env.MINIO_ACCESS_KEY
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  MINIO_ACCESS_KEY credential not found, using empty string"
+                        env.MINIO_ACCESS_KEY = ''
+                    }
+                    try {
+                        withCredentials([string(credentialsId: 'MINIO_SECRET_KEY', variable: 'MINIO_SECRET_KEY')]) {
+                            env.MINIO_SECRET_KEY = env.MINIO_SECRET_KEY
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  MINIO_SECRET_KEY credential not found, using empty string"
+                        env.MINIO_SECRET_KEY = ''
                     }
 
                     // ArgoCD configuration
@@ -205,9 +197,8 @@ pipeline {
                                             export CHAT_GATEWAY_JWT_SECRET=${CHAT_GATEWAY_JWT_SECRET}
                                             export CHAT_GATEWAY_API_KEY=${CHAT_GATEWAY_API_KEY}
                                             export POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-                                            export DIFY_API_KEY=${DIFY_API_KEY}
-                                            export DIFY_DRILLQUIZ_API_KEY=${DIFY_DRILLQUIZ_API_KEY}
-                                            export DIFY_COINTUTOR_API_KEY=${DIFY_COINTUTOR_API_KEY}
+                                            export MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+                                            export MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
                                             cd chat-admin && ./ci/k8s.sh ${BUILD_NUMBER} ${GIT_BRANCH} ${NAMESPACE} deploy
                                         else
                                             echo "❌ chat-admin/ci/k8s.sh file not found in workspace"

@@ -55,9 +55,8 @@ Configure these in Jenkins (Credential IDs used by the pipeline):
 | `CHAT_GATEWAY_JWT_SECRET` | Chat gateway JWT signing |
 | `CHAT_GATEWAY_API_KEY` | Chat gateway API key |
 | `POSTGRES_PASSWORD` | PostgreSQL password (K8s uses PostgreSQL; same as drillquiz devops DB) |
-| `DIFY_API_KEY` | Dify API (fallback) |
-| `DIFY_DRILLQUIZ_API_KEY` | Dify DrillQuiz app |
-| `DIFY_COINTUTOR_API_KEY` | Dify CoinTutor app |
+| `MINIO_ACCESS_KEY` | MinIO object storage access key |
+| `MINIO_SECRET_KEY` | MinIO object storage secret key |
 | `ARGOCD_PASSWORD` | ArgoCD (when `ARGOCD_ENABLED=true`) |
 
 Optional: `BASE_DOMAIN` / `DOMAIN_PLACEHOLDER` (default `drillquiz.com`) for ingress/host names.
@@ -75,7 +74,7 @@ Use `ci.sh` to run pipeline-like steps on your machine (build image, run k8s.sh)
 ./ci/ci.sh --env
 ```
 
-Set environment variables as needed (e.g. `BUILD_NUMBER`, `GIT_BRANCH`, `NAMESPACE`, `KUBECONFIG`, `CHAT_GATEWAY_JWT_SECRET`, Dify keys, ArgoCD vars). For deploy to work, `kubectl` must be configured (e.g. `KUBECONFIG`) and credentials available.
+Set environment variables as needed (e.g. `BUILD_NUMBER`, `GIT_BRANCH`, `NAMESPACE`, `KUBECONFIG`, `CHAT_GATEWAY_JWT_SECRET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, ArgoCD vars). For deploy to work, `kubectl` must be configured (e.g. `KUBECONFIG`) and credentials available.
 
 ## Troubleshooting
 
@@ -86,4 +85,4 @@ Set environment variables as needed (e.g. `BUILD_NUMBER`, `GIT_BRANCH`, `NAMESPA
   Check `DOCKER_PASSWORD` (and registry URL) and that the job runs in a context where `docker build`/`docker push` are allowed.
 
 - **Local ci.sh**  
-  Run `chmod +x ci/ci.sh ci/k8s.sh` if needed. For deploy, set `KUBECONFIG` and any required env vars (JWT, Dify, ArgoCD) before running.
+  Run `chmod +x ci/ci.sh ci/k8s.sh` if needed. For deploy, set `KUBECONFIG` and any required env vars (JWT, MinIO, ArgoCD) before running.

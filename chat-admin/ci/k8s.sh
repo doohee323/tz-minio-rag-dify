@@ -831,14 +831,8 @@ deploy_to_kubernetes() {
     # TZ-Chat Gateway secrets (base64 for k8s Secret data)
     CHAT_GATEWAY_JWT_SECRET_B64=$(echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64)
     CHAT_GATEWAY_API_KEY_B64=$(echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64)
-    DIFY_API_KEY_B64=$(echo -n "${DIFY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_API_KEY:-}" | base64)
-    DIFY_DRILLQUIZ_API_KEY_B64=$(echo -n "${DIFY_DRILLQUIZ_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_DRILLQUIZ_API_KEY:-}" | base64)
-    DIFY_COINTUTOR_API_KEY_B64=$(echo -n "${DIFY_COINTUTOR_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_COINTUTOR_API_KEY:-}" | base64)
     sed -i.bak "s|#CHAT_GATEWAY_JWT_SECRET|${CHAT_GATEWAY_JWT_SECRET_B64}|g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
     sed -i.bak "s|#CHAT_GATEWAY_API_KEY|${CHAT_GATEWAY_API_KEY_B64}|g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
-    awk -v key="$DIFY_API_KEY_B64" '{gsub(/#DIFY_API_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
-    awk -v key="$DIFY_DRILLQUIZ_API_KEY_B64" '{gsub(/#DIFY_DRILLQUIZ_API_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
-    awk -v key="$DIFY_COINTUTOR_API_KEY_B64" '{gsub(/#DIFY_COINTUTOR_API_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
 
     # Update ConfigMap from env file (skip if no env file, e.g. chat-admin uses ConfigMap in k8s.yaml only)
     if [ -f "env" ]; then
@@ -911,14 +905,8 @@ deploy_to_kubernetes() {
         # TZ-Chat Gateway secrets for ArgoCD
         CHAT_GATEWAY_JWT_SECRET_B64=$(echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_JWT_SECRET:-}" | base64)
         CHAT_GATEWAY_API_KEY_B64=$(echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${CHAT_GATEWAY_API_KEY:-}" | base64)
-        DIFY_API_KEY_B64=$(echo -n "${DIFY_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_API_KEY:-}" | base64)
-        DIFY_DRILLQUIZ_API_KEY_B64=$(echo -n "${DIFY_DRILLQUIZ_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_DRILLQUIZ_API_KEY:-}" | base64)
-        DIFY_COINTUTOR_API_KEY_B64=$(echo -n "${DIFY_COINTUTOR_API_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${DIFY_COINTUTOR_API_KEY:-}" | base64)
         sed -i.bak "s|#CHAT_GATEWAY_JWT_SECRET|${CHAT_GATEWAY_JWT_SECRET_B64}|g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         sed -i.bak "s|#CHAT_GATEWAY_API_KEY|${CHAT_GATEWAY_API_KEY_B64}|g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
-        awk -v key="$DIFY_API_KEY_B64" '{gsub(/#DIFY_API_KEY/, key)}1' ${TARGET_K8S_FILE} > ${TARGET_K8S_FILE}.tmp && mv ${TARGET_K8S_FILE}.tmp ${TARGET_K8S_FILE}
-        awk -v key="$DIFY_DRILLQUIZ_API_KEY_B64" '{gsub(/#DIFY_DRILLQUIZ_API_KEY/, key)}1' ${TARGET_K8S_FILE} > ${TARGET_K8S_FILE}.tmp && mv ${TARGET_K8S_FILE}.tmp ${TARGET_K8S_FILE}
-        awk -v key="$DIFY_COINTUTOR_API_KEY_B64" '{gsub(/#DIFY_COINTUTOR_API_KEY/, key)}1' ${TARGET_K8S_FILE} > ${TARGET_K8S_FILE}.tmp && mv ${TARGET_K8S_FILE}.tmp ${TARGET_K8S_FILE}
 
         log_info "✅ Variable substitutions completed for ArgoCD deployment"
         
