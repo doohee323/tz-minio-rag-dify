@@ -34,7 +34,7 @@ rag-docs/
       GUIDE.md
 ```
 
-- **CoinTutor source docs**: In `tz-local/resource/rag/cointutor/` — `USE_CASES.md`, `USER_GUIDE.md`, `CoinTutor.yml` (Dify app template). Upload `.md` to MinIO `rag-docs/raw/cointutor/` then index.
+- **CoinTutor source docs**: In `tz-chatbot/rag/cointutor/` — `USE_CASES.md`, `USER_GUIDE.md`, `CoinTutor.yml` (Dify app template). Upload `.md` to MinIO `rag-docs/raw/cointutor/` then index.
 - DrillQuiz docs: Upload only under `raw/drillquiz/`.
 
 ---
@@ -139,10 +139,10 @@ This repo is organized around **approach A (two backends)** for Job, CronJob, an
 
 ## 8. RAG collection reset
 
-Use `tz-local/resource/rag/reset-rag-collections.sh` to clear vector data and re-index.
+Use `tz-chatbot/rag/reset-rag-collections.sh` to clear vector data and re-index.
 
 ```bash
-cd tz-local/resource/rag
+cd tz-chatbot/rag
 ./reset-rag-collections.sh [cointutor|drillquiz|all] [reindex]
 ```
 
@@ -167,4 +167,4 @@ Example: `./reset-rag-collections.sh cointutor reindex` — reset CoinTutor coll
 - [ ] Apply DrillQuiz Job/CronJob and run indexing once
 - [ ] Deploy RAG Backend (rag-backend) and RAG Backend DrillQuiz (rag-backend-drillquiz)
 - [ ] In Dify: register CoinTutor RAG tool (rag-backend URL) and DrillQuiz RAG tool (rag-backend-drillquiz URL), then attach to each chatbot
-- [ ] When reset is needed: use `tz-local/resource/rag/reset-rag-collections.sh`
+- [ ] When reset is needed: use `tz-chatbot/rag/reset-rag-collections.sh`

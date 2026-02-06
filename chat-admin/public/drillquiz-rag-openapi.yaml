@@ -1,0 +1,63 @@
+# DrillQuiz RAG backend OpenAPI schema (for Dify custom tool)
+# In Dify "Create custom tool" → name "DrillQuiz RAG", paste this into the schema field
+# DrillQuiz only: calls rag-backend-drillquiz (rag_docs_drillquiz)
+openapi: 3.0.0
+info:
+  title: DrillQuiz RAG API
+  description: DrillQuiz RAG search API (Qdrant rag_docs_drillquiz)
+  version: 1.0.0
+servers:
+  - url: http://rag-backend-drillquiz.rag.svc.cluster.local:8000
+    description: DrillQuiz RAG Backend (in-cluster)
+paths:
+  /query:
+    post:
+      summary: Search DrillQuiz knowledge by question
+      description: Vector search on rag_docs_drillquiz with user question, returns related chunks
+      operationId: query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+              properties:
+                question:
+                  type: string
+                  description: User question
+                top_k:
+                  type: integer
+                  default: 5
+                  description: Number of results to return
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  question:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        text:
+                          type: string
+                        source:
+                          type: string
+                        path:
+                          type: string
+                        score:
+                          type: number
+  /health:
+    get:
+      summary: Health check
+      operationId: health
+      responses:
+        "200":
+          description: OK

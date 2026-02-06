@@ -93,7 +93,7 @@ When providing chat via **iframe/embed** or **API proxy** from the DrillQuiz sit
      - Adding a new service = register `system_id` at the gateway and issue an API key (or signing key). **No Dify call logic in client code.**
 
 - **Chat UI** (optional):
-  - **Option 1**: Gateway serves a **chat window page**. On “Open chat”, the client redirects to `https://chat-gateway.example.com/chat?token=<JWT>`. JWT contains `system_id`, `user_id`, expiry. Gateway validates the token and shows Dify embed or its own UI (calling the above API to Dify internally).
+  - **Option 1**: Gateway serves a **chat window page**. On “Open chat”, the client redirects to `https://chat-admin.example.com/chat?token=<JWT>`. JWT contains `system_id`, `user_id`, expiry. Gateway validates the token and shows Dify embed or its own UI (calling the above API to Dify internally).
   - **Option 2**: Client keeps using embed, but the **page that loads the embed** is served by the gateway. On entry, gateway validates the token and injects `difyChatbotConfig.inputs` or sets `user` on API calls.
 
 - **Result**  

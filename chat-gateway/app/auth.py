@@ -3,6 +3,7 @@ from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader, HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
+from app.services.system_config import get_allowed_system_ids_list
 
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
 BEARER = HTTPBearer(auto_error=False)
@@ -19,10 +20,10 @@ class ChatIdentity:
 
 
 def _check_system_id(system_id: str) -> None:
-    settings = get_settings()
-    if not settings.allowed_system_ids_list:
+    allowed = get_allowed_system_ids_list()
+    if not allowed:
         return
-    if system_id not in settings.allowed_system_ids_list:
+    if system_id not in allowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="system_id not allowed")
 
 

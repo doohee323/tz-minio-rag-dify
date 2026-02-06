@@ -1,0 +1,24 @@
+{
+  "name": "chat-gateway-frontend",
+  "version": "1.0.0",
+  "description": "TZ-Chat Gateway Vue Frontend (tz-cointutor style)",
+  "scripts": {
+    "serve": "cross-env FRONTEND_PORT=8080 vue-cli-service serve",
+    "serve:dev": "cross-env ENVIRONMENT=development VUE_APP_ENVIRONMENT=development FRONTEND_PORT=8080 vue-cli-service serve",
+    "serve:prod": "cross-env ENVIRONMENT=production VUE_APP_ENVIRONMENT=production vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "build:dev": "cross-env ENVIRONMENT=development VUE_APP_ENVIRONMENT=development vue-cli-service build",
+    "build:prod": "cross-env ENVIRONMENT=production VUE_APP_ENVIRONMENT=production vue-cli-service build"
+  },
+  "dependencies": {
+    "vue": "^2.6.14",
+    "vue-router": "^3.5.4"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^5.0.9",
+    "@vue/cli-service": "^5.0.8",
+    "cross-env": "^7.0.3",
+    "vue-template-compiler": "^2.6.14"
+  },
+  "browserslist": ["> 1%", "last 2 versions", "not dead"]
+}

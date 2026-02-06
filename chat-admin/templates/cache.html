@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversation cache</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1rem; }
+    .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+    .filters label { display: flex; align-items: center; gap: 0.25rem; }
+    .filters input { padding: 0.35rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }
+    th { background: #f0f0f0; }
+    tr:hover { background: #f9f9f9; }
+    tr.pointer { cursor: pointer; }
+    .msg-user { background: #e3f2fd; }
+    .msg-assistant { background: #f3e5f5; }
+    .messages { margin-top: 1rem; }
+    .messages h3 { margin-bottom: 0.5rem; }
+    .message { padding: 0.5rem; margin-bottom: 0.25rem; border-radius: 4px; white-space: pre-wrap; }
+    .error { color: #c62828; }
+    .empty { color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Conversation cache</h1>
+  <p class="empty">Query synced conversations by system, user, and date range. API Key required.</p>
+
+  <div class="filters">
+    <label>API Key <input type="password" id="apiKey" placeholder="X-API-Key" value="{{ api_key }}"></label>
+    <label>System <input type="text" id="systemId" placeholder="e.g. cointutor"></label>
+    <label>User <input type="text" id="userId" placeholder="e.g. 12345"></label>
+    <label>From <input type="date" id="fromDate"></label>
+    <label>To <input type="date" id="toDate"></label>
+    <button type="button" id="btnSearch">Search</button>
+  </div>
+
+  <div id="error" class="error"></div>
+  <table id="tableConv">
+    <thead>
+      <tr>
+        <th>System</th>
+        <th>User</th>
+        <th>Name</th>
+        <th>Created</th>
+        <th>Synced</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <p id="convEmpty" class="empty" style="display:none;">No conversations match the filters.</p>
+  <p id="convEmptyHint" class="empty" style="display:none; margin-top: 0.5rem;">
+    There may be no synced conversations yet. (1) Use the <strong>chat page</strong> (/chat?token=...) and keep or close the tab so sync/me runs and saves to DB. (2) Or call <strong>POST /v1/sync</strong> (header X-API-Key) to sync all registered users.
+  </p>
+
+  <div class="messages" id="messagesBox" style="display:none;">
+    <h3>Messages: <span id="convTitle"></span></h3>
+    <div id="messagesList"></div>
+  </div>
+
+  <script>
+    const apiKeyEl = document.getElementById('apiKey');
+    const systemIdEl = document.getElementById('systemId');
+    const userIdEl = document.getElementById('userId');
+    const fromDateEl = document.getElementById('fromDate');
+    const toDateEl = document.getElementById('toDate');
+    const btnSearch = document.getElementById('btnSearch');
+    const errorEl = document.getElementById('error');
+    const tableBody = document.querySelector('#tableConv tbody');
+    const convEmpty = document.getElementById('convEmpty');
+    const convEmptyHint = document.getElementById('convEmptyHint');
+    const messagesBox = document.getElementById('messagesBox');
+    const convTitle = document.getElementById('convTitle');
+    const messagesList = document.getElementById('messagesList');
+
+    function headers() {
+      const key = apiKeyEl.value.trim();
+      return key ? { 'X-API-Key': key } : {};
+    }
+
+    async function doSearch() {
+      errorEl.textContent = '';
+      const params = new URLSearchParams();
+      if (systemIdEl.value.trim()) params.set('system_id', systemIdEl.value.trim());
+      if (userIdEl.value.trim()) params.set('user_id', userIdEl.value.trim());
+      if (fromDateEl.value) params.set('from_date', fromDateEl.value);
+      if (toDateEl.value) params.set('to_date', toDateEl.value);
+      try {
+        const r = await fetch('/v1/cache/conversations?' + params.toString(), { headers: headers() });
+        if (!r.ok) {
+          const t = await r.text();
+          throw new Error(t || 'API key required or an error occurred.');
+        }
+        const data = await r.json();
+        tableBody.innerHTML = '';
+        convEmpty.style.display = data.length ? 'none' : 'block';
+        convEmptyHint.style.display = data.length ? 'none' : 'block';
+        messagesBox.style.display = 'none';
+        data.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.className = 'pointer';
+          tr.dataset.conversationId = c.conversation_id;
+          tr.dataset.name = (c.name || c.conversation_id) || '';
+          tr.innerHTML = `
+            <td>${escapeHtml(c.system_id)}</td>
+            <td>${escapeHtml(c.user_id)}</td>
+            <td>${escapeHtml(c.name || '-')}</td>
+            <td>${c.created_at ? formatDate(c.created_at) : '-'}</td>
+            <td>${c.synced_at ? formatDate(c.synced_at) : '-'}</td>
+          `;
+          tr.addEventListener('click', () => loadMessages(c.conversation_id, tr.dataset.name));
+          tableBody.appendChild(tr);
+        });
+      } catch (e) {
+        errorEl.textContent = e.message;
+      }
+    }
+
+    btnSearch.addEventListener('click', doSearch);
+    if (apiKeyEl.value.trim()) doSearch();
+
+    async function loadMessages(conversationId, title) {
+      errorEl.textContent = '';
+      try {
+        const r = await fetch(`/v1/cache/conversations/${encodeURIComponent(conversationId)}/messages`, { headers: headers() });
+        if (!r.ok) throw new Error('Failed to load messages');
+        const data = await r.json();
+        convTitle.textContent = title || conversationId;
+        messagesBox.style.display = 'block';
+        messagesList.innerHTML = data.length ? data.map(m => `
+          <div class="message msg-${m.role}">
+            <strong>${m.role === 'user' ? 'User' : 'Bot'}</strong> ${m.created_at ? formatDate(m.created_at) : ''}<br>
+            ${escapeHtml(m.content || '')}
+          </div>
+        `).join('') : '<p class="empty">No messages.</p>';
+      } catch (e) {
+        errorEl.textContent = e.message;
+      }
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+    function formatDate(iso) {
+      try {
+        const d = new Date(iso);
+        return isNaN(d.getTime()) ? iso : d.toLocaleString();
+      } catch (_) { return iso; }
+    }
+  </script>
+</body>
+</html>

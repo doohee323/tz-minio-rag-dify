@@ -4,7 +4,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$DIR/.." && pwd)"
 cd "$ROOT"
 if [[ ! -d .venv ]]; then
-  echo "Error: .venv not found. Run ./local.sh once or: python3 -m venv .venv && pip install -r requirements.txt"
+  echo "Error: .venv not found. Run ./gateway.sh once or: python3 -m venv .venv && pip install -r requirements.txt"
   exit 1
 fi
 exec .venv/bin/python scripts/gen-jwt.py "$@"

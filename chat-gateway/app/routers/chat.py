@@ -8,7 +8,7 @@ from app.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import API_KEY_HEADER, get_identity_from_body, get_identity_optional, ChatIdentity
 from app.config import get_settings
-from app.dify_client import get_conversation_messages, get_conversations, send_chat_message
+from app.dify_client import delete_conversation, get_conversation_messages, get_conversations, send_chat_message
 from app.models import ConversationMapping
 from app.schemas import ChatRequest, ChatResponse, ConversationItem, MessageItem
 from app.sync_service import record_chat_to_db, sync_all_from_mapping
@@ -197,6 +197,33 @@ async def list_messages(
         )
         for m in messages
     ]
+
+
+@router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_conversation_route(
+    conversation_id: str,
+    system_id: str = Query(..., description="System ID"),
+    user_id: str = Query(..., description="User ID"),
+    identity: ChatIdentity | None = Depends(get_identity_optional),
+    api_key: str = Security(API_KEY_HEADER),
+):
+    ident = _resolve_identity(identity, None, api_key, system_id=system_id, user_id=user_id)
+    try:
+        await delete_conversation(
+            conversation_id, ident.dify_user, system_id=ident.system_id
+        )
+    except httpx.HTTPStatusError as e:
+        logger.warning("Dify delete conversation error: %s %s", e.response.status_code, conversation_id)
+        raise HTTPException(
+            status_code=min(e.response.status_code, 599),
+            detail="Failed to delete conversation",
+        )
+    except httpx.RequestError as e:
+        logger.warning("Dify delete request error: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Chat service temporarily unavailable.",
+        )
 
 
 @router.post("/sync", response_model=dict)

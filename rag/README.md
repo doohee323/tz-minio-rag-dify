@@ -5,11 +5,11 @@ Running `install.sh` once sets up the full stack: **RAG** (Qdrant, backend, fron
 ## Install
 
 ```bash
-cd tz-local/resource/rag
+cd tz-chatbot/rag
 bash install.sh
 ```
 
-- From inside VM: `/vagrant/tz-local/resource/rag/install.sh`
+- From inside VM: `/vagrant/tz-chatbot/rag/install.sh`
 - From local: `KUBECONFIG=~/.kube/topzone.iptime.org.config bash install.sh`
 
 ### Required after install: Create Secrets (per topic)
@@ -43,7 +43,7 @@ kubectl create secret generic rag-ingestion-secret-drillquiz -n rag \
 ## Uninstall (remove all resources)
 
 ```bash
-cd tz-local/resource/rag
+cd tz-chatbot/rag
 ./uninstall.sh
 ```
 
@@ -112,7 +112,7 @@ kubectl patch secret rag-ingestion-secret-drillquiz -n rag -p '{"data":{"MINIO_A
 If bucket `rag-docs` does not exist when the indexer runs, it is **created automatically**. No need to create it manually.
 
 - **To create in console**: MinIO web console → Buckets → Create Bucket → name `rag-docs`.
-- **Upload documents**: Use prefix `raw/cointutor/` (or `raw/drillquiz/`) and upload **PDF, .txt, .md** under it. CoinTutor source docs are in `tz-local/resource/rag/cointutor/` (USE_CASES.md, USER_GUIDE.md); upload to MinIO `rag-docs/raw/cointutor/` to include them in CoinTutor indexing.
+- **Upload documents**: Use prefix `raw/cointutor/` (or `raw/drillquiz/`) and upload **PDF, .txt, .md** under it. CoinTutor source docs are in `tz-chatbot/rag/cointutor/` (USE_CASES.md, USER_GUIDE.md); upload to MinIO `rag-docs/raw/cointutor/` to include them in CoinTutor indexing.
 
 #### Indexer log messages
 

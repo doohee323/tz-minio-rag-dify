@@ -68,6 +68,22 @@ async def get_conversations(user: str, system_id: str | None = None) -> list[dic
         return data.get("data", []) or []
 
 
+async def delete_conversation(
+    conversation_id: str, user: str, system_id: str | None = None
+) -> None:
+    url = f"{_base_url(system_id)}/conversations/{conversation_id}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.request(
+            "DELETE",
+            url,
+            json={"user": user},
+            headers=_headers(system_id),
+        )
+        if r.status_code >= 400:
+            _log_dify_error("DELETE", url, r.status_code, r.content)
+        r.raise_for_status()
+
+
 async def get_conversation_messages(
     conversation_id: str, user: str, system_id: str | None = None
 ) -> list[dict]:

@@ -166,13 +166,13 @@ curl "http://localhost:6333/collections"
 
 | # | Task | Description |
 |---|------|--------------|
-| 7-1 | Choose Dify install method | **K8s Helm deploy** (`tz-local/resource/dify/install.sh`) |
+| 7-1 | Choose Dify install method | **K8s Helm deploy** (`tz-chatbot/dify/install.sh`) |
 | 7-2 | Use Helm chart | Community chart [BorisPolonsky/dify-helm](https://github.com/BorisPolonsky/dify-helm). Document repo clone as fallback if add fails |
 | 7-3 | Configure | `values.yaml`: vector DB=Qdrant(`qdrant.rag.svc.cluster.local:6333`), file=MinIO (S3, devops NS), Ingress (Jenkins-style host) |
-| 7-4 | Connect RAG and chatbot in Web UI | Data source (MinIO/local), vector DB, question→answer flow — see `tz-local/resource/dify/README.md` |
+| 7-4 | Connect RAG and chatbot in Web UI | Data source (MinIO/local), vector DB, question→answer flow — see `tz-chatbot/dify/README.md` |
 
 **Outcome**: RAG-backed chatbot working from Dify Web UI  
-**Config location**: `tz-local/resource/dify/` (install.sh, values.yaml, dify-ingress.yaml, README.md)
+**Config location**: `tz-chatbot/dify/` (install.sh, values.yaml, dify-ingress.yaml, README.md)
 
 ---
 
@@ -222,7 +222,7 @@ kubectl -n rag get all
 - [ ] Phase 4: Indexer run once, Qdrant points_count > 0
 - [ ] Phase 5: Metadata rules, search/citation test
 - [ ] Phase 6: CronJob auto-indexing
-- [ ] Phase 7: Dify installed and RAG chatbot connected (`tz-local/resource/dify/install.sh` + README)
+- [ ] Phase 7: Dify installed and RAG chatbot connected (`tz-chatbot/dify/install.sh` + README)
 
 ---
 
@@ -232,8 +232,8 @@ kubectl -n rag get all
 
 | Location | Contents |
 |----------|----------|
-| `tz-local/resource/rag/` | namespace, Qdrant (Helm), collection init Job, RAG backend/frontend, Ingress, indexer Job/CronJob, `scripts/ingest.py` |
-| `tz-local/resource/dify/` | install.sh (Helm), values.yaml, dify-ingress.yaml, minio-bucket-job, status.sh, README |
+| `tz-chatbot/rag/` | namespace, Qdrant (Helm), collection init Job, RAG backend/frontend, Ingress, indexer Job/CronJob, `scripts/ingest.py` |
+| `tz-chatbot/dify/` | install.sh (Helm), values.yaml, dify-ingress.yaml, minio-bucket-job, status.sh, README |
 
 **Deployment not yet executed** — checklist items are unchecked. Resume from the phase that matches what is actually applied on the cluster.
 
@@ -247,7 +247,7 @@ kubectl -n rag get all
 
 3. **Phase 2–3**  
    Deploy RAG stack:  
-   `cd tz-local/resource/rag && bash install.sh`  
+   `cd tz-chatbot/rag && bash install.sh`  
    → Qdrant, collection `rag_docs`, RAG backend/frontend, Ingress applied.
 
 4. **Phase 4**  
@@ -261,7 +261,7 @@ kubectl -n rag get all
 
 6. **Phase 7**  
    (Optional) Verify NFS StorageClass `nfs-client`, then  
-   `cd tz-local/resource/dify && bash install.sh`  
-   → Access Dify Web UI and connect RAG and chatbot (see `tz-local/resource/dify/README.md`).
+   `cd tz-chatbot/dify && bash install.sh`  
+   → Access Dify Web UI and connect RAG and chatbot (see `tz-chatbot/dify/README.md`).
 
 Mark the checklist items with `[x]` as you complete each phase to track progress.

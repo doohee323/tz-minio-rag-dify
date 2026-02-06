@@ -1,4 +1,4 @@
-# tz-minio-rag-dify
+# tz-chatbot
 
 This repository sets up a **RAG (Retrieval-Augmented Generation)** and **Dify chatbot** demo environment on Kubernetes. It installs, in order: Ingress NGINX, MinIO, Qdrant, topic-specific RAG backends (CoinTutor / DrillQuiz), and Dify.
 

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat (recorded)</title>
+  <link href="/static/chat/css/app.css" rel="stylesheet">
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.__CHAT_INIT__ = {
+      token: {{ token | tojson }},
+      systemId: {{ system_id | tojson }},
+      userId: {{ user_id | tojson }},
+      embed: {{ 'true' if embed else 'false' }},
+      lang: {{ lang | tojson }}
+    };
+  </script>
+  <script src="/static/chat/js/chunk-vendors.js"></script>
+  <script src="/static/chat/js/app.js"></script>
+</body>
+</html>

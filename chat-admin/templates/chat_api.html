@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat (recorded)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f5f5f5; }
+    .header {
+      padding: 0.6rem 1rem;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .header span { opacity: 0.9; }
+    .header a { color: #7dd3fc; text-decoration: none; }
+    .header a:hover { text-decoration: underline; }
+    .layout { display: flex; height: {% if embed %}100vh{% else %}calc(100vh - 40px){% endif %}; }
+    .sidebar {
+      width: 240px;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+    .sidebar h3 { margin: 0 0 0.5rem; font-size: 0.85rem; color: #6b7280; }
+    .btn { padding: 0.4rem 0.75rem; border-radius: 6px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 0.9rem; }
+    .btn:hover { background: #f9fafb; }
+    .btn-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .conv-list { list-style: none; margin: 0; padding: 0; }
+    .conv-list li {
+      padding: 0.5rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .conv-list li:hover { background: #f3f4f6; }
+    .conv-list li.active { background: #dbeafe; font-weight: 500; }
+    .main { flex: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; min-height: 0; }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .msg { max-width: 85%; padding: 0.6rem 0.9rem; border-radius: 12px; white-space: pre-wrap; word-break: break-word; }
+    .msg-user { align-self: flex-end; background: #2563eb; color: #fff; }
+    .msg-assistant { align-self: flex-start; background: #f3f4f6; color: #111; }
+    .msg-role { font-size: 0.75rem; opacity: 0.8; margin-bottom: 0.2rem; }
+    .input-row {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .input-row input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .input-row input:focus { outline: none; border-color: #2563eb; }
+    .empty-state { color: #6b7280; text-align: center; padding: 2rem; }
+    .error { color: #dc2626; font-size: 0.9rem; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  {% if not embed %}
+  <div class="header">
+    <span>System: {{ system_id }} · User: {{ user_id }}</span>
+  </div>
+  {% endif %}
+  <div class="layout">
+    {% if not embed %}
+    <aside class="sidebar">
+      <h3>Conversations</h3>
+      <button type="button" class="btn btn-primary" id="btnNew">New conversation</button>
+      <ul class="conv-list" id="convList"></ul>
+    </aside>
+    {% endif %}
+    <main class="main">
+      <div class="messages" id="messages">
+        <p class="empty-state" id="emptyState"></p>
+      </div>
+      <div class="error" id="error"></div>
+      <div class="input-row">
+        <input type="text" id="inputMsg" placeholder="" autocomplete="off">
+        <button type="button" class="btn btn-primary" id="btnSend"></button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function() {
+      const token = {{ token | tojson }};
+      const systemId = {{ system_id | tojson }};
+      const userId = {{ user_id | tojson }};
+      const embed = {{ 'true' if embed else 'false' }};
+      const langParam = {{ lang | tojson }};
+      if (!token || !systemId || !userId) return;
+
+      const ALLOWED_LANGS = ['en', 'es', 'ko', 'zh', 'ja'];
+      function resolveLang() {
+        if (langParam && ALLOWED_LANGS.includes(langParam)) return langParam;
+        const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+        if (nav.startsWith('ko')) return 'ko';
+        if (nav.startsWith('ja')) return 'ja';
+        if (nav.startsWith('zh')) return 'zh';
+        if (nav.startsWith('es')) return 'es';
+        return 'en';
+      }
+      const lang = resolveLang();
+
+      const UI = {
+        en: { placeholder: 'Type a message...', send: 'Send', empty: 'Type a message.', emptyFull: 'Start a new chat or select one from the list.', me: 'Me', bot: 'Bot', errorList: 'Failed to load conversations.', errorMessages: 'Failed to load messages.', errorSend: 'Send failed.' },
+        es: { placeholder: 'Escribe un mensaje...', send: 'Enviar', empty: 'Escribe un mensaje.', emptyFull: 'Inicia un chat nuevo o elige uno de la lista.', me: 'Yo', bot: 'Bot', errorList: 'Error al cargar conversaciones.', errorMessages: 'Error al cargar mensajes.', errorSend: 'Error al enviar.' },
+        ko: { placeholder: '메시지를 입력하세요...', send: '전송', empty: '메시지를 입력하세요.', emptyFull: '새 대화를 시작하거나 왼쪽에서 대화를 선택하세요.', me: '나', bot: '봇', errorList: '대화 목록 조회 실패.', errorMessages: '메시지 조회 실패.', errorSend: '전송 실패.' },
+        zh: { placeholder: '输入消息...', send: '发送', empty: '输入消息。', emptyFull: '开始新对话或从列表中选择。', me: '我', bot: '助手', errorList: '加载对话列表失败。', errorMessages: '加载消息失败。', errorSend: '发送失败。' },
+        ja: { placeholder: 'メッセージを入力...', send: '送信', empty: 'メッセージを入力してください。', emptyFull: '新しい会話を始めるか、一覧から選択してください。', me: '自分', bot: 'ボット', errorList: '会話一覧の取得に失敗しました。', errorMessages: 'メッセージの取得に失敗しました。', errorSend: '送信に失敗しました。' }
+      };
+      const t = UI[lang] || UI.en;
+
+      const convList = document.getElementById('convList');
+      const messages = document.getElementById('messages');
+      const emptyState = document.getElementById('emptyState');
+      const inputMsg = document.getElementById('inputMsg');
+      const btnSend = document.getElementById('btnSend');
+      const btnNew = document.getElementById('btnNew');
+      const errorEl = document.getElementById('error');
+      if (inputMsg) inputMsg.placeholder = t.placeholder;
+      if (btnSend) btnSend.textContent = t.send;
+      if (emptyState) emptyState.textContent = embed ? t.empty : t.emptyFull;
+
+      function authHeader() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+
+      let currentConversationId = null;
+
+      function clearMessages() {
+        const keep = messages.querySelector('#emptyState');
+        messages.innerHTML = '';
+        if (keep) messages.appendChild(keep);
+        emptyState.style.display = 'block';
+        emptyState.textContent = embed ? t.empty : t.emptyFull;
+      }
+
+      function addMessage(role, content) {
+        emptyState.style.display = 'none';
+        const div = document.createElement('div');
+        div.className = 'msg msg-' + role;
+        div.innerHTML = '<div class="msg-role">' + (role === 'user' ? t.me : t.bot) + '</div>' + escapeHtml(content || '');
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s == null ? '' : s;
+        return div.innerHTML;
+      }
+
+      async function loadConversations() {
+        if (embed || !convList) return;
+        try {
+          const r = await fetch('/v1/conversations?system_id=' + encodeURIComponent(systemId) + '&user_id=' + encodeURIComponent(userId), { headers: authHeader() });
+          if (!r.ok) throw new Error(t.errorList);
+          const data = await r.json();
+          convList.innerHTML = '';
+          data.forEach(c => {
+            const li = document.createElement('li');
+            li.textContent = c.name || c.id || '(Conversation)';
+            li.dataset.id = c.id;
+            if (c.id === currentConversationId) li.classList.add('active');
+            li.addEventListener('click', () => selectConversation(c.id));
+            convList.appendChild(li);
+          });
+        } catch (e) {
+          errorEl.textContent = e.message || t.errorList;
+        }
+      }
+
+      async function selectConversation(id) {
+        if (embed) return;
+        currentConversationId = id;
+        convList.querySelectorAll('li').forEach(li => { li.classList.toggle('active', li.dataset.id === id); });
+        clearMessages();
+        if (!id) return;
+        try {
+          const r = await fetch('/v1/conversations/' + encodeURIComponent(id) + '/messages?system_id=' + encodeURIComponent(systemId) + '&user_id=' + encodeURIComponent(userId), { headers: authHeader() });
+          if (!r.ok) throw new Error(t.errorMessages);
+          const data = await r.json();
+          data.forEach(m => addMessage(m.role, m.content));
+        } catch (e) {
+          errorEl.textContent = e.message || t.errorMessages;
+        }
+      }
+
+      if (!embed && btnNew) {
+        btnNew.addEventListener('click', () => {
+          currentConversationId = null;
+          convList.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+          clearMessages();
+          errorEl.textContent = '';
+        });
+      }
+
+      async function sendMessage() {
+        const text = inputMsg.value.trim();
+        if (!text) return;
+        errorEl.textContent = '';
+        inputMsg.value = '';
+        addMessage('user', text);
+        try {
+          const body = { message: text, inputs: { language: lang } };
+          if (currentConversationId) body.conversation_id = currentConversationId;
+          const r = await fetch('/v1/chat', {
+            method: 'POST',
+            headers: authHeader(),
+            body: JSON.stringify(body),
+          });
+          if (!r.ok) {
+            const raw = await r.text();
+            let errText = raw;
+            try {
+              const j = JSON.parse(raw);
+              if (j.detail) errText = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+            } catch (_) {}
+            throw new Error(errText || t.errorSend);
+          }
+          const data = await r.json();
+          if (data.conversation_id) currentConversationId = data.conversation_id;
+          addMessage('assistant', data.answer || '');
+          if (!embed) loadConversations();
+        } catch (e) {
+          errorEl.textContent = e.message || t.errorSend;
+        }
+      }
+
+      btnSend.addEventListener('click', sendMessage);
+      inputMsg.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+      if (!embed) loadConversations();
+    })();
+  </script>
+</body>
+</html>

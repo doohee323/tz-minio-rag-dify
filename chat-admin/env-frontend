@@ -1,0 +1,5 @@
+# Frontend build env (CI/local). VUE_APP_* are baked into the build.
+# TZ-Chat Gateway URL (for /docs, /cache links - empty = same origin)
+# VUE_APP_API_BASE=
+VUE_APP_ENVIRONMENT=production
+# 로그인/회원가입: API Key 불필요. POST /v1/chat-token-guest 사용 (same-origin)

@@ -9,6 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.config import get_settings
 from app.database import init_db
 from app.routers import cache_view, chat, chat_page, debug, index
+from app.services.system_config import refresh_allowed_systems
 
 # Ensure app logs appear in terminal even with uvicorn --reload (force=True overrides existing config)
 logging.basicConfig(
@@ -34,6 +35,7 @@ class RequestLogMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    await refresh_allowed_systems()
     logger.info("TZ-Chat Gateway ready")
     yield
 

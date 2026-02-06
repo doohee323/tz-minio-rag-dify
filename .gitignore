@@ -12,3 +12,16 @@ chat-gateway/.env
 
 # Refer folder
 refer/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.db
+
+# Node
+node_modules/

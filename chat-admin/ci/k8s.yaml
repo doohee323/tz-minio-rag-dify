@@ -1,0 +1,171 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-admin
+spec:
+  selector:
+    matchLabels:
+      app: chat-admin
+  replicas: 2
+  minReadySeconds: 30
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        org: tz
+        team: devops
+        environment: main
+        app: chat-admin
+    spec:
+      imagePullSecrets:
+        - name: tz-registrykey
+      volumes:
+      - name: kubeconfig
+        secret:
+          secretName: chat-admin-kubeconfig-GIT_BRANCH
+          optional: true
+      containers:
+      - name: chat-admin
+        image: doohee323/chat-admin:BUILD_NUMBER_PLACEHOLDER
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /docs
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /docs
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 1
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - name: kubeconfig
+          mountPath: /etc/kubeconfig
+          readOnly: true
+        env:
+        - name: KUBECONFIG
+          value: "/etc/kubeconfig/config"
+        envFrom:
+        - configMapRef:
+            name: chat-admin-configmap-GIT_BRANCH
+        - secretRef:
+            name: chat-admin-secret-GIT_BRANCH
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-admin
+spec:
+  type: NodePort
+  selector:
+    app: chat-admin
+  ports:
+  - port: 80
+    name: http
+    targetPort: 8000
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chat-admin-configmap-GIT_BRANCH
+data:
+  DIFY_BASE_URL: ""
+  DIFY_DRILLQUIZ_BASE_URL: "https://dify.drillquiz.com"
+  DIFY_COINTUTOR_BASE_URL: ""
+  ALLOWED_CHAT_TOKEN_ORIGINS: ""
+  ALLOWED_SYSTEM_IDS: "drillquiz,cointutor"
+  POSTGRES_DB: "chat_admin"
+  POSTGRES_USER: "postgres"
+  POSTGRES_HOST: "devops-postgres-postgresql.devops.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chat-admin
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "5"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: chat.DOMAIN_PLACEHOLDER
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chat-admin
+            port:
+              number: 80
+  tls:
+    - hosts:
+        - chat.DOMAIN_PLACEHOLDER
+      secretName: chat-admin
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: chat-admin-secret-GIT_BRANCH
+type: Opaque
+data:
+  CHAT_GATEWAY_JWT_SECRET: #CHAT_GATEWAY_JWT_SECRET
+  CHAT_GATEWAY_API_KEY: #CHAT_GATEWAY_API_KEY
+  POSTGRES_PASSWORD: #POSTGRES_PASSWORD
+  DIFY_API_KEY: #DIFY_API_KEY
+  DIFY_DRILLQUIZ_API_KEY: #DIFY_DRILLQUIZ_API_KEY
+  DIFY_COINTUTOR_API_KEY: #DIFY_COINTUTOR_API_KEY
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chat-admin-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: chat-admin
+
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: chat-admin-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: chat-admin
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70

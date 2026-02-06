@@ -1,0 +1,18 @@
+<!-- ========== Add to App.vue (tz-cointutor reference) ========== -->
+
+<!-- 1) Template: add one line below Footer at bottom of layout -->
+    <AppFooter />
+    <ChatWidget />
+  </div>
+</template>
+
+<!-- 2) Script: add imports -->
+import AppFooter from '@/components/Footer.vue'
+import ChatWidget from '@/components/ChatWidget.vue'
+import authService from '@/services/authService'
+
+<!-- 3) Script: register components -->
+  components: {
+    AppFooter,
+    ChatWidget
+  },

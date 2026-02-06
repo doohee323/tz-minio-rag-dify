@@ -24,7 +24,7 @@ The page also links to the **sample integration site** ([devops.drillquiz.com](h
 
 After starting the gateway server, open a **URL that includes a JWT** to see the chat UI; **all sent messages are stored in the DB**.
 
-1. Start server: `./local.sh`
+1. Start server: `./gateway.sh`
 2. Generate a test JWT (**from the chat-gateway directory**):
    ```bash
    cd chat-gateway

@@ -7,15 +7,15 @@ Install Dify chatbot integrated with the RAG stack (Qdrant, MinIO). One run of `
 **Prerequisites**
 - Qdrant deployed in RAG namespace and `rag_docs` collection created
 - **NFS StorageClass** (`nfs-client`, ReadWriteMany): api/worker share the same PVC, so RWX is required.  
-  If not installed: run `tz-local/resource/dynamic-provisioning/nfs/install.sh`, then check `k get storageclass` for `nfs-client`.
+  If not installed: run `tz-chatbot/dynamic-provisioning/nfs/install.sh` (if available), then check `k get storageclass` for `nfs-client`.
 - (Optional) MinIO deployed in devops namespace — for Dify file storage
 
 ```bash
-cd tz-local/resource/dify
+cd tz-chatbot/dify
 bash install.sh
 ```
 
-- From inside VM: `/vagrant/tz-local/resource/dify/install.sh`
+- From inside VM: `/vagrant/tz-chatbot/dify/install.sh`
 - From local: `KUBECONFIG=~/.kube/your.config bash install.sh`
 
 **Install method**: K8s Helm deploy (Community chart [BorisPolonsky/dify-helm](https://github.com/BorisPolonsky/dify-helm)).  
