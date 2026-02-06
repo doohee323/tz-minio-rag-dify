@@ -102,7 +102,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: chat-qa.DOMAIN_PLACEHOLDER
+  - host: chat-admin-qa.DOMAIN_PLACEHOLDER
     http:
       paths:
       - path: /
@@ -114,7 +114,7 @@ spec:
               number: 80
   tls:
     - hosts:
-        - chat-qa.DOMAIN_PLACEHOLDER
+        - chat-admin-qa.DOMAIN_PLACEHOLDER
       secretName: chat-admin-GIT_BRANCH
 
 ---

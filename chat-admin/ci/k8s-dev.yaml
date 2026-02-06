@@ -114,7 +114,7 @@ spec:
               number: 80
   tls:
     - hosts:
-        - chat-dev.DOMAIN_PLACEHOLDER
+        - chat-admin-dev.DOMAIN_PLACEHOLDER
       secretName: chat-admin-GIT_BRANCH
 
 ---
