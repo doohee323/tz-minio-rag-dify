@@ -812,6 +812,7 @@ deploy_to_kubernetes() {
 
     # Base64 encode secrets
     GOOGLE_OAUTH_CLIENT_SECRET=$(echo -n ${GOOGLE_OAUTH_CLIENT_SECRET} | base64)
+    MINIO_ACCESS_KEY_B64=$(echo -n "${MINIO_ACCESS_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${MINIO_ACCESS_KEY:-}" | base64)
     MINIO_SECRET_KEY=$(echo -n ${MINIO_SECRET_KEY} | base64)
     POSTGRES_PASSWORD=$(echo -n ${POSTGRES_PASSWORD} | base64)
     OPENAI_API_KEY=$(echo -n ${OPENAI_API_KEY} | base64 -w 0)
@@ -819,6 +820,7 @@ deploy_to_kubernetes() {
 
     # Substitute secrets (macOS compatible)
     sed -i.bak "s|#GOOGLE_OAUTH_CLIENT_SECRET|${GOOGLE_OAUTH_CLIENT_SECRET}|g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
+    awk -v key="$MINIO_ACCESS_KEY_B64" '{gsub(/#MINIO_ACCESS_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
     sed -i.bak "s|#MINIO_SECRET_KEY|${MINIO_SECRET_KEY}|g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
     sed -i.bak "s|#POSTGRES_PASSWORD|${POSTGRES_PASSWORD}|g" ci/k8s.yaml && rm -f ci/k8s.yaml.bak
     awk -v key="$OPENAI_API_KEY" '{gsub(/#OPENAI_API_KEY/, key)}1' ci/k8s.yaml > ci/k8s.yaml.tmp && mv ci/k8s.yaml.tmp ci/k8s.yaml
@@ -892,12 +894,14 @@ deploy_to_kubernetes() {
         
         # Substitute Secret values
         GOOGLE_OAUTH_CLIENT_SECRET_B64=$(echo -n ${GOOGLE_OAUTH_CLIENT_SECRET} | base64)
+        MINIO_ACCESS_KEY_B64=$(echo -n "${MINIO_ACCESS_KEY:-}" | base64 -w 0 2>/dev/null || echo -n "${MINIO_ACCESS_KEY:-}" | base64)
         MINIO_SECRET_KEY_B64=$(echo -n ${MINIO_SECRET_KEY} | base64)
         POSTGRES_PASSWORD_B64=$(echo -n ${POSTGRES_PASSWORD} | base64)
         OPENAI_API_KEY_B64=$(echo -n ${OPENAI_API_KEY} | base64 -w 0)
         GEMINI_API_KEY_B64=$(echo -n ${GEMINI_API_KEY:-} | base64 -w 0 || echo "")
         
         sed -i.bak "s|#GOOGLE_OAUTH_CLIENT_SECRET|${GOOGLE_OAUTH_CLIENT_SECRET_B64}|g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
+        awk -v key="$MINIO_ACCESS_KEY_B64" '{gsub(/#MINIO_ACCESS_KEY/, key)}1' ${TARGET_K8S_FILE} > ${TARGET_K8S_FILE}.tmp && mv ${TARGET_K8S_FILE}.tmp ${TARGET_K8S_FILE}
         sed -i.bak "s|#MINIO_SECRET_KEY|${MINIO_SECRET_KEY_B64}|g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         sed -i.bak "s|#POSTGRES_PASSWORD|${POSTGRES_PASSWORD_B64}|g" ${TARGET_K8S_FILE} && rm -f ${TARGET_K8S_FILE}.bak
         awk -v key="$OPENAI_API_KEY_B64" '{gsub(/#OPENAI_API_KEY/, key)}1' ${TARGET_K8S_FILE} > ${TARGET_K8S_FILE}.tmp && mv ${TARGET_K8S_FILE}.tmp ${TARGET_K8S_FILE}

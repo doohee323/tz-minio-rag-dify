@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field, computed_field, AliasChoices
+from pydantic import Field, computed_field, AliasChoices, field_validator
 from functools import lru_cache
 
 
@@ -44,6 +44,17 @@ class Settings(BaseSettings):
     # MinIO for file upload: rag-docs/raw/{system_id}/filename
     minio_endpoint: str = Field("localhost", validation_alias="MINIO_ENDPOINT")
     minio_port: int = Field(9000, validation_alias="MINIO_PORT")
+
+    @field_validator("minio_port", mode="before")
+    @classmethod
+    def parse_minio_port(cls, v: str | int) -> int:
+        """Handle K8s env: MINIO_PORT can be 'tcp://10.233.50.97:9000' or '9000'."""
+        if isinstance(v, int):
+            return v
+        s = str(v).strip()
+        if ":" in s:
+            return int(s.rsplit(":", 1)[-1])
+        return int(s) if s else 9000
     minio_bucket: str = Field("rag-docs", validation_alias="MINIO_BUCKET")
     minio_access_key: str = Field("", validation_alias="MINIO_ACCESS_KEY")
     minio_secret_key: str = Field("", validation_alias="MINIO_SECRET_KEY")
