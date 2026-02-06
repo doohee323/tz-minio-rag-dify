@@ -13,6 +13,7 @@
           <button type="button" class="btn-logout" @click="logout">로그아웃</button>
         </template>
         <template v-else>
+          <router-link to="/about" class="nav-link">About</router-link>
           <router-link to="/register" class="nav-link">회원가입</router-link>
           <router-link to="/login" class="nav-link">로그인</router-link>
         </template>

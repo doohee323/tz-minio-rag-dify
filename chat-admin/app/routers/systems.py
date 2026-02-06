@@ -294,10 +294,10 @@ async def list_files(
     try:
         items = list_objects_in_prefix(client, bucket, prefix)
     except Exception as e:
-        logger.exception("MinIO list failed")
+        logger.exception("MinIO list failed: bucket=%s prefix=%s", bucket, prefix)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"MinIO list failed: {e}",
+            detail=f"MinIO list failed: {e}. Check MINIO_ENDPOINT, MINIO_BUCKET (expected {bucket}/{prefix}), credentials.",
         ) from e
     return items
 

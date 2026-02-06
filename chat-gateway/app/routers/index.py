@@ -1,14 +1,15 @@
-"""Root route: project introduction page for chat.drillquiz.com."""
+"""Root route: redirect to chat-admin."""
 
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter
+from fastapi.responses import RedirectResponse
 
-from app.templates import templates
+from app.config import get_settings
 
 router = APIRouter()
 
 
-@router.get("/", response_class=HTMLResponse)
-async def index_page(request: Request):
-    """Serve the project introduction page at the root URL."""
-    return templates.TemplateResponse("index.html", {"request": request})
+@router.get("/")
+async def index_page():
+    """Redirect root to chat-admin."""
+    url = get_settings().chat_admin_url.rstrip("/")
+    return RedirectResponse(url=url, status_code=302)

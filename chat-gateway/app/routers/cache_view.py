@@ -1,7 +1,7 @@
-"""Cache (conversation_cache, message_cache) query API and web page."""
+"""Cache (conversation_cache, message_cache) query API."""
 from datetime import datetime, time
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Security, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +9,6 @@ from app.auth import API_KEY_HEADER
 from app.config import get_settings
 from app.database import get_db
 from app.models import ConversationCache, MessageCache
-from app.templates import templates
 
 router = APIRouter(tags=["cache"])
 
@@ -90,15 +89,10 @@ async def list_cached_messages(
     ]
 
 
-# ---------- Web page ----------
+# ---------- Web page (redirect to chat-admin) ----------
 
-@router.get("/cache", response_class=HTMLResponse)
-async def cache_view_page(request: Request, api_key: str = Query("", description="API Key (for query)")):
-    """Page to query cached conversations by system, user, and date range."""
-    return templates.TemplateResponse(
-        "cache.html",
-        {
-            "request": request,
-            "api_key": api_key,
-        },
-    )
+@router.get("/cache")
+async def cache_view_page():
+    """Redirect /cache to chat-admin (채팅조회)."""
+    url = get_settings().chat_admin_url.rstrip("/")
+    return RedirectResponse(url=url, status_code=302)

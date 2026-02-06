@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     dify_drillquiz_api_key: str = ""
     dify_cointutor_base_url: str = ""
     dify_cointutor_api_key: str = ""
+    # Redirect root URL to chat-admin (default: http://localhost:8080)
+    chat_admin_url: str = Field("http://localhost:8080", validation_alias="CHAT_ADMIN_URL")
 
     def get_dify_base_url(self, system_id: str | None) -> str:
         if system_id:

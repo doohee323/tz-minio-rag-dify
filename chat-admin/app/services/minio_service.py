@@ -35,22 +35,20 @@ def ensure_bucket(client: Minio, bucket: str) -> None:
 
 
 def list_objects_in_prefix(client: Minio, bucket: str, prefix: str) -> list[dict]:
-    """List objects under prefix. Returns [{object_name, size, last_modified}, ...]. Folders excluded."""
+    """List objects under prefix. Returns [{object_name, size, last_modified}, ...]. Folders excluded.
+    Path: bucket=rag-docs, prefix=raw/drillquiz/ -> lists rag-docs/raw/drillquiz/*"""
     prefix = prefix.rstrip("/") + "/" if prefix else ""
     out: list[dict] = []
-    try:
-        for obj in client.list_objects(bucket, prefix=prefix, recursive=True):
-            if obj.object_name.endswith("/"):
-                continue
-            size = obj.size if isinstance(obj.size, int) else getattr(obj.size, "value", 0)
-            out.append({
-                "object_name": obj.object_name,
-                "filename": obj.object_name[len(prefix):] if obj.object_name.startswith(prefix) else obj.object_name,
-                "size": size,
-                "last_modified": obj.last_modified.isoformat() if obj.last_modified else None,
-            })
-    except Exception:
-        pass
+    for obj in client.list_objects(bucket, prefix=prefix, recursive=True):
+        if obj.object_name.endswith("/"):
+            continue
+        size = obj.size if isinstance(obj.size, int) else getattr(obj.size, "value", 0)
+        out.append({
+            "object_name": obj.object_name,
+            "filename": obj.object_name[len(prefix):] if obj.object_name.startswith(prefix) else obj.object_name,
+            "size": size,
+            "last_modified": obj.last_modified.isoformat() if obj.last_modified else None,
+        })
     return out
 
 

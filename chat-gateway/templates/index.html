@@ -3,325 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TZ-Chat Gateway — RAG & Dify</title>
+  <title>TZ-Chat Gateway</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-hover: #7dd3fc;
-    }
     * { box-sizing: border-box; }
     body {
-      font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+      font-family: system-ui, sans-serif;
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
-    .wrap {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem;
-    }
-    h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      margin: 0 0 0.5rem;
-      letter-spacing: -0.02em;
-    }
-    .tagline {
-      color: var(--muted);
-      font-size: 1.05rem;
-      margin-bottom: 2rem;
-    }
-    .card {
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-    .card h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 0 0 0.75rem;
-      color: var(--accent);
-    }
-    .card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-    .links {
+      background: #0f172a;
+      color: #f1f5f9;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      margin-top: 2rem;
-    }
-    .links a {
-      display: inline-flex;
       align-items: center;
-      padding: 0.6rem 1rem;
-      background: var(--surface);
-      color: var(--accent);
+      justify-content: center;
+      padding: 1rem;
+    }
+    .wrap { text-align: center; max-width: 480px; }
+    h1 { font-size: 1.5rem; margin: 0 0 0.5rem; }
+    p { color: #94a3b8; font-size: 0.95rem; margin: 0 0 1rem; }
+    a {
+      color: #38bdf8;
       text-decoration: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .links a:hover {
-      background: rgba(56, 189, 248, 0.1);
-      border-color: var(--accent);
-      color: var(--accent-hover);
-    }
-    .footer {
-      margin-top: 3rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    .section-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin: 2.5rem 0 1rem;
-      color: var(--text);
-      letter-spacing: -0.01em;
-    }
-    .diagram {
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1.25rem;
-      border: 1px solid rgba(255,255,255,0.06);
-      overflow-x: auto;
-    }
-    .diagram-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .flow-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 0.5rem 0;
-    }
-    .flow-step {
-      background: var(--bg);
+      padding: 0.5rem 1rem;
       border: 1px solid rgba(56, 189, 248, 0.35);
       border-radius: 8px;
-      padding: 0.6rem 1rem;
       font-size: 0.9rem;
-      color: var(--text);
-      white-space: nowrap;
+      display: inline-block;
+      margin: 0.25rem;
     }
-    .flow-arrow {
-      color: var(--muted);
-      font-size: 1rem;
-      flex-shrink: 0;
-    }
-    .flow-step.user { border-color: rgba(34, 197, 94, 0.5); }
-    .flow-step.gateway { border-color: rgba(56, 189, 248, 0.5); }
-    .flow-step.dify { border-color: rgba(168, 85, 247, 0.5); }
-    .flow-step.rag { border-color: rgba(251, 146, 60, 0.5); }
-    .arch-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 0.75rem;
-      margin: 0.5rem 0;
-    }
-    .arch-box {
-      background: var(--bg);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      font-size: 0.85rem;
-      text-align: center;
-      color: var(--text);
-    }
-    .arch-box.entry { border-color: rgba(34, 197, 94, 0.4); }
-    .arch-box.gw { border-color: rgba(56, 189, 248, 0.4); }
-    .arch-box.app { border-color: rgba(168, 85, 247, 0.4); }
-    .arch-box.data { border-color: rgba(251, 146, 60, 0.4); }
-    .arch-arrow-row {
-      display: flex;
-      justify-content: center;
-      margin: 0.25rem 0;
-      color: var(--muted);
-      font-size: 0.8rem;
-    }
-    .seq-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin: 0.35rem 0;
-      font-size: 0.9rem;
-    }
-    .seq-label {
-      min-width: 6rem;
-      color: var(--muted);
-    }
-    .seq-box {
-      flex: 1;
-      background: var(--bg);
-      border-radius: 6px;
-      padding: 0.4rem 0.75rem;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
+    a:hover { background: rgba(56, 189, 248, 0.1); }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>TZ-Chat Gateway</h1>
-    <p class="tagline">Unified chat API in front of Dify. Part of the tz-minio-rag-dify stack.</p>
-
-    <div class="card">
-      <h2>What this is</h2>
-      <p>
-        This service is the <strong>TZ-Chat Gateway</strong>: a single API and chat UI for multiple apps (e.g. DrillQuiz, CoinTutor).
-        It sits in front of <a href="https://dify.ai" target="_blank" rel="noopener" style="color: var(--accent);">Dify</a>,
-        manages users and conversations, and can sync chat history to its own database for support and analytics.
-        Sample integration: <a href="https://devops.drillquiz.com/" target="_blank" rel="noopener" style="color: var(--accent);">devops.drillquiz.com</a> (DrillQuiz).
-      </p>
-    </div>
-
-    <div class="card">
-      <h2>Project: tz-minio-rag-dify</h2>
-      <p>
-        The full stack runs on Kubernetes: <strong>MinIO</strong> (object store), <strong>Qdrant</strong> (vector DB),
-        <strong>RAG backends</strong> (CoinTutor / DrillQuiz), <strong>Dify</strong> (chatbots), and this <strong>TZ-Chat Gateway</strong>.
-        RAG ingestion runs on a schedule; Dify apps call the RAG backends as tools.
-      </p>
-    </div>
-
-    <h2 class="section-title">1. Workflow</h2>
-    <p class="tagline" style="margin-top: 0; margin-bottom: 0.75rem;">Check out this repo, use sample apps (DrillQuiz / CoinTutor) as reference to register and apply your app.</p>
-    <div class="diagram">
-      <div class="diagram-title">Flow: add your app, then use chat</div>
-      <div class="flow-row">
-        <span class="flow-step">1. Check out this code</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">2. Register your app (reference: DrillQuiz / CoinTutor)</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">3. Get token &amp; open chat page</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">4. Chat</span>
-      </div>
-      <div class="flow-row" style="margin-top: 0.75rem;">
-        <span class="flow-step">You add and register your app; you do not choose from existing apps. Token: issued after your app’s login, or call <code>/v1/chat-token</code> with API Key.</span>
-      </div>
-    </div>
-
-    <h2 class="section-title">2. How the app operates</h2>
-    <p class="tagline" style="margin-top: 0; margin-bottom: 0.75rem;">Request-to-response processing order</p>
-    <div class="diagram">
-      <div class="diagram-title">Request → response sequence</div>
-      <div class="seq-row">
-        <span class="seq-label">Client</span>
-        <span class="seq-box">Send message from chat UI (JWT or API Key)</span>
-      </div>
-      <div class="arch-arrow-row">↓</div>
-      <div class="seq-row">
-        <span class="seq-label">TZ-Chat Gateway</span>
-        <span class="seq-box">Validate JWT/API Key → sync conversation/messages to DB → proxy to Dify API</span>
-      </div>
-      <div class="arch-arrow-row">↓</div>
-      <div class="seq-row">
-        <span class="seq-label">Dify</span>
-        <span class="seq-box">Run DrillQuiz or CoinTutor app (calls RAG tool when needed)</span>
-      </div>
-      <div class="arch-arrow-row">↓</div>
-      <div class="seq-row">
-        <span class="seq-label">RAG</span>
-        <span class="seq-box">Qdrant + RAG Backend search → return results to Dify (required)</span>
-      </div>
-      <div class="arch-arrow-row">↓</div>
-      <div class="seq-row">
-        <span class="seq-label">Response</span>
-        <span class="seq-box">Dify → TZ-Chat Gateway → client (streaming or normal response)</span>
-      </div>
-    </div>
-
-    <h2 class="section-title">3. Architecture</h2>
-    <p class="tagline" style="margin-top: 0; margin-bottom: 0.75rem;">tz-minio-rag-dify stack components</p>
-    <div class="diagram">
-      <div class="diagram-title">Components and relationships</div>
-      <div class="arch-arrow-row">Ingress (TLS / routing)</div>
-      <div class="arch-arrow-row">↓</div>
-      <div class="arch-grid">
-        <div class="arch-box entry">TZ-Chat Gateway<br><small>(FastAPI, 8088)</small></div>
-        <div class="arch-box gw">Dify<br><small>DrillQuiz / CoinTutor</small></div>
-        <div class="arch-box app">RAG Backend<br><small>CoinTutor, DrillQuiz</small></div>
-        <div class="arch-box data">Qdrant<br><small>vector DB</small></div>
-        <div class="arch-box data">MinIO<br><small>object store</small></div>
-      </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted);">
-        TZ-Chat Gateway: auth, conversation management, Dify proxy. Dify: calls RAG as tool. RAG: MinIO docs + Qdrant vector search.
-      </div>
-    </div>
-
-    <h2 class="section-title">4. Apply to your project</h2>
-    <p class="tagline" style="margin-top: 0; margin-bottom: 0.75rem;">Steps to add chat to an existing project (e.g. Vue app)</p>
-    <div class="diagram">
-      <div class="diagram-title">Integration order</div>
-      <div class="flow-row">
-        <span class="flow-step">1. Deploy TZ-Chat Gateway</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">2. Configure env</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">3. Backend token</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">4. Frontend widget</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">5. CORS &amp; CSP</span>
-      </div>
-      <div class="seq-row" style="margin-top: 1rem;">
-        <span class="seq-label">1. Deploy</span>
-        <span class="seq-box">Run TZ-Chat Gateway on server (Docker/K8s or <code>./gateway.sh</code>). Set JWT secret, Dify API key, <code>CHAT_GATEWAY_API_KEY</code> in <code>.env</code>.</span>
-      </div>
-      <div class="seq-row">
-        <span class="seq-label">2. Env</span>
-        <span class="seq-box"><code>CHAT_GATEWAY_JWT_SECRET</code>, <code>CHAT_GATEWAY_API_KEY</code>, <code>DIFY_*_API_KEY</code>. See <code>.env.example</code>, <code>scripts/gen-env-values.sh</code>.</span>
-      </div>
-      <div class="seq-row">
-        <span class="seq-label">3. Backend</span>
-        <span class="seq-box">Issue JWT for logged-in users from your backend, or have frontend call <code>GET /v1/chat-token?system_id=...&amp;user_id=...</code> with <code>X-API-Key</code>.</span>
-      </div>
-      <div class="seq-row">
-        <span class="seq-label">4. Frontend</span>
-        <span class="seq-box">Copy <code>sample/ChatWidget.vue</code> → wire <code>authService</code> (getUserSync, subscribe) → add <code>&lt;ChatWidget /&gt;</code> in App.vue. Set <code>VUE_APP_CHAT_GATEWAY_URL</code>, <code>VUE_APP_CHAT_GATEWAY_API_KEY</code>.</span>
-      </div>
-      <div class="seq-row">
-        <span class="seq-label">5. CORS·CSP</span>
-        <span class="seq-box">Allow your project domain in TZ-Chat Gateway (<code>ALLOWED_CHAT_TOKEN_ORIGINS</code>). If the app has CSP, add TZ-Chat Gateway URL to <code>connect-src</code> and <code>frame-src</code>.</span>
-      </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted);">
-        Full steps: <a href="https://github.com/doohee323/tz-minio-rag-dify/blob/main/chat-gateway/sample/INTEGRATION.md" target="_blank" rel="noopener" style="color: var(--accent);">sample/INTEGRATION.md</a>
-      </div>
-    </div>
-
-    <div class="links">
-      <a href="https://github.com/doohee323/tz-minio-rag-dify" target="_blank" rel="noopener">GitHub source</a>
-      <a href="https://devops.drillquiz.com/" target="_blank" rel="noopener">Sample site (DrillQuiz)</a>
-      <a href="/docs">API docs (OpenAPI)</a>
-      <a href="/chat">Chat page</a>
-      <a href="/cache">Cache / history (API key required)</a>
-    </div>
-
-    <p class="footer">
-      Chat page requires a valid JWT (<code>?token=...</code>). Use the chat from DrillQuiz or CoinTutor, or obtain a token via <code>GET /v1/chat-token</code> with <code>X-API-Key</code>.
-    </p>
+    <p>Unified chat API in front of Dify. Project intro and docs are in chat-admin.</p>
+    <a href="/docs">API docs</a>
+    <a href="/chat">Chat page</a>
   </div>
 </body>
 </html>

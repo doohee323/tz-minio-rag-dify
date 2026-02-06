@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Intro from '../views/Intro.vue'
+import About from '../views/About.vue'
 import Chat from '../views/Chat.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
@@ -10,7 +11,9 @@ import AdminSystems from '../views/AdminSystems.vue'
 Vue.use(VueRouter)
 
 const routes = [
-  { path: '/', name: 'Intro', component: Intro },
+  { path: '/', redirect: '/admin' },
+  { path: '/intro', name: 'Intro', component: Intro },
+  { path: '/about', name: 'About', component: About },
   { path: '/login', name: 'Login', component: Login },
   { path: '/register', name: 'Register', component: Register },
   { path: '/admin', name: 'Admin', component: Admin },

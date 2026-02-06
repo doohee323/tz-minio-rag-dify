@@ -37,6 +37,7 @@
     </div>
 
     <div class="links">
+      <router-link to="/about" class="link-btn">About (상세)</router-link>
       <a href="https://github.com/doohee323/tz-chatbot" target="_blank" rel="noopener">GitHub source</a>
       <a :href="apiBase + '/docs'" target="_blank" rel="noopener">API docs (OpenAPI)</a>
       <router-link to="/chat">Chat page</router-link>
@@ -108,4 +109,5 @@ export default {
   border: 1px solid rgba(56, 189, 248, 0.25);
 }
 .links a:hover { background: rgba(56, 189, 248, 0.1); }
+.links .link-btn { text-decoration: none; color: inherit; }
 </style>

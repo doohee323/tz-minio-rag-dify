@@ -36,7 +36,7 @@ install_ingress() {
     echo "  → Already installed, skipping"
     return 0
   fi
-  (cd "${REPO_ROOT}/ingress_nginx" && bash install.sh)
+  (cd "${REPO_ROOT}/ingress-nginx" && bash install.sh)
 }
 
 # 2. MinIO (object store, rag-docs bucket — Phase 1)

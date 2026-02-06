@@ -632,9 +632,9 @@ export default {
 .modal { background: linear-gradient(to bottom right, var(--dark-light), var(--dark)); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; min-width: 400px; max-width: 90vw; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
 .modal h3 { margin: 0 0 1rem; color: #fff; font-weight: 600; }
 .modal p { color: #e5e7eb; }
-.rag-files-section .rag-files-list { margin-bottom: 0.75rem; }
+.rag-files-section .rag-files-list { margin-bottom: 0.75rem; overflow-x: auto; }
 .rag-files-section .rag-loading, .rag-files-section .rag-empty { font-size: 0.9rem; color: #6b7280; }
-.rag-files-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.rag-files-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 0.9rem; }
 .rag-files-table th, .rag-files-table td { padding: 0.5rem 0.75rem; text-align: left; border: 1px solid var(--border); }
 .rag-files-table th { background: rgba(15, 23, 42, 0.5); color: #9ca3af; }
 .btn-del-small { padding: 0.2rem 0.5rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); color: #f87171; border: none; border-radius: 0.5rem; cursor: pointer; }
